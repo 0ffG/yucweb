@@ -1,0 +1,101 @@
+.credit-card {
+    background: #000;
+    border-radius: 16px;
+    width: 340px;
+    height: 200px;
+    padding: 20px;
+    margin-bottom: 20px;
+    color: white;
+    font-family: 'Arial', sans-serif;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-image: radial-gradient(circle at center, #111 0%, #000 100%);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .credit-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: url('https://www.transparenttextures.com/patterns/black-linen.png');
+    opacity: 0.05;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .mastercard-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .mastercard-logo .circle {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+  }
+  
+  .mastercard-logo .red {
+    background-color: red;
+  }
+  
+  .mastercard-logo .yellow {
+    background-color: gold;
+    margin-left: -10px;
+  }
+  
+  .chip {
+    width: 45px;
+    height: 30px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #e0c78d, #caa74f);
+  }
+  
+  .card-number-label {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-top: 10px;
+  }
+  
+  .card-number {
+    font-size: 18px;
+    letter-spacing: 2px;
+    margin-bottom: 10px;
+  }
+  
+  .card-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .card-name {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-top: 10px;
+  }
+  
+  .card-expiration {
+    text-align: right;
+  }
+  
+  .card-expiration .label {
+    font-size: 10px;
+    opacity: 0.7;
+    display: block;
+  }
+  
+  .card-expiration .date {
+    font-size: 16px;
+  }
+  
