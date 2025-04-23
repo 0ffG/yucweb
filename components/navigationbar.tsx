@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { YucLogo } from './yuc-logo'; // Eğer yukarıdaki gibi logo varsa
+import { YucLogo } from './yuc-logo';
 
 export default function NavigationBar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -19,12 +19,16 @@ export default function NavigationBar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-10 backdrop-blur-md bg-slate-900">
-      <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center">
-          <YucLogo />
-        </Link>
+    <header className="sticky top-0 z-10 backdrop-blur-md bg-slate-900 w-full border-b border-slate-700">
+      <div className="w-full px-6 py-4 flex items-center justify-between">
+        {/* Sol: Logo her zaman ekranın en solunda */}
+        <div className="flex items-center justify-start">
+          <Link href="/" className="flex items-center">
+            <YucLogo />
+          </Link>
+        </div>
 
+        {/* Sağ: Bağlantılar */}
         <div className="flex items-center gap-4">
           {!isLoggedIn ? (
             <>

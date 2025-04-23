@@ -2,45 +2,79 @@
 
 export default function AdminProfile() {
   return (
-    <div className="min-h-screen bg-white">
-      <main className="container px-4 py-8">
-        <div className="mb-6 flex gap-4">
-          <div className="flex-1 rounded border border-black p-4 text-center">
-            <h2 className="text-lg font-bold">OKULLARI GÖRÜNTÜLE VE EKLE/DÜZENLE</h2>
-            <div className="mt-4 flex justify-center">
-              <button className="rounded bg-black px-4 py-2 text-white">SİL</button>
+    <div className="min-h-screen bg-gray-50">
+      <main className="max-w-6xl mx-auto px-6 py-10 space-y-10">
+
+        {/* Form Alanları */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* USER SİLME */}
+          <div className="rounded-2xl bg-white shadow-md p-6 border border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-800 text-center">
+              Kullanıcı Sil
+            </h2>
+            <p className="text-sm text-gray-500 text-center mt-1">
+              Silmek istediğiniz kullanıcının ID’sini giriniz
+            </p>
+            <div className="mt-6">
+              <input
+                type="text"
+                placeholder="User ID"
+                className="w-full rounded-lg border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-red-400"
+              />
+              <button className="mt-4 w-full rounded-lg bg-red-500 px-4 py-2 text-white font-semibold transition-all hover:bg-red-600 hover:shadow">
+                Sil
+              </button>
             </div>
           </div>
-          <div className="flex-1 rounded border border-black p-4 text-center">
-            <h2 className="text-lg font-bold">BAĞIŞLARI GÖRÜNTÜLE VE DÜZENLE</h2>
-            <div className="mt-4 flex justify-center">
-              <button className="rounded bg-black px-4 py-2 text-white">BUTTON 2</button>
+
+          {/* BAĞIŞ SAYISI GÜNCELLEME */}
+          <div className="rounded-2xl bg-white shadow-md p-6 border border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-800 text-center">
+              Toplam Bağışı Güncelle
+            </h2>
+            <p className="text-sm text-gray-500 text-center mt-1">
+              Yeni toplam bağış sayısını giriniz
+            </p>
+            <div className="mt-6">
+              <input
+                type="number"
+                placeholder="Bağış Sayısı"
+                className="w-full rounded-lg border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <button className="mt-4 w-full rounded-lg bg-blue-600 px-4 py-2 text-white font-semibold transition-all hover:bg-blue-700 hover:shadow">
+                Güncelle
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="rounded border border-black p-4">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-black">
-                <th className="p-2 text-left">KULLANICI ADI</th>
-                <th className="p-2 text-left">BAĞIŞ TÜRÜ</th>
-                <th className="p-2 text-left">MİKTAR</th>
-                <th className="p-2 text-left">TARİH</th>
-              </tr>
-            </thead>
-            <tbody>
-              {[1, 2, 3, 4, 5].map((item) => (
-                <tr key={item} className="border-b border-black">
-                  <td className="p-2">User {item}</td>
-                  <td className="p-2">Type</td>
-                  <td className="p-2">Amount</td>
-                  <td className="p-2">Date</td>
+        {/* TABLO */}
+        <div className="rounded-2xl bg-white shadow-md p-6 border border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Bağış Geçmişi</h2>
+          <div className="overflow-x-auto">
+            <table className="w-full table-auto text-sm text-left text-gray-600">
+              <thead className="bg-gray-100 text-gray-700 font-medium">
+                <tr>
+                  <th className="p-3">Kullanıcı Adı</th>
+                  <th className="p-3">Bağış Türü</th>
+                  <th className="p-3">Miktar</th>
+                  <th className="p-3">Tarih</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {[1, 2, 3, 4, 5].map((item) => (
+                  <tr key={item} className="hover:bg-gray-50">
+                    <td className="p-3 font-medium">User {item}</td>
+                    <td className="p-3">Eşya</td>
+                    <td className="p-3">₺500</td>
+                    <td className="p-3">2025-04-21</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
+
       </main>
     </div>
   );
