@@ -30,14 +30,12 @@ export default function DonationPage() {
       alert('Lütfen okul seçin ve adet belirtin.');
       return;
     }
-    alert(`"${selectedSchool}" okuluna ${donationCount} adet "${inputItem}" bağışı yapılacak.`);
-    // Gerekirse burada backende gönderim yapılabilir.
+    alert("${selectedSchool}" okuluna ${donationCount} adet "${inputItem}" bağışı yapılacak.);
   };
 
   return (
     <>
       <div className="min-h-screen bg-white">
-        {/* Logo ve Slogan Kutusu */}
         <div className="logo-slogan-box">
           <div className="logo">
             <Image
@@ -51,7 +49,6 @@ export default function DonationPage() {
           <div className="slogan">Bir çocuk daha mutlu olsun!</div>
         </div>
 
-        {/* Yardım Tipi Butonlar */}
         <div className="button-group">
           <button
             className="donate-btn item"
@@ -66,8 +63,7 @@ export default function DonationPage() {
             PARA YARDIMI
           </button>
         </div>
-
-        {/* İçerik */}
+        <hr />
         <div className="dynamic-section">
           <div className="card">
             {donationType === 'material' && (
@@ -80,6 +76,35 @@ export default function DonationPage() {
                   onChange={e => setInputItem(e.target.value)}
                 />
 
+                {/* Seçim ve Adet inputları buraya alındı */}
+                {/* Seçim ve Adet inputları buraya alındı ve ortalandı */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', marginBottom: '20px' }}>
+              <div style={{ textAlign: 'left' }}>
+                <label style={{ display: 'block', marginBottom: '10px' }}>
+                  <strong>Seçilen Okul:</strong>
+                  <input
+                    type="text"
+                    className="custom-amount"
+                    value={selectedSchool}
+                    placeholder="Okul adı yazın veya listeden seçin"
+                    onChange={(e) => setSelectedSchool(e.target.value)}
+                  />
+                </label>
+
+                <label style={{ display: 'block', marginBottom: '10px' }}>
+                  <strong>Bağış Adedi:</strong>
+                  <input
+                    type="number"
+                    min="1"
+                    className="custom-amount"
+                    value={donationCount}
+                    onChange={(e) =>
+                      setDonationCount(Math.max(0, Number(e.target.value)))
+                    }
+                  />
+                </label>
+              </div>
+            </div>
                 <table>
                   <thead>
                     <tr>
@@ -105,36 +130,9 @@ export default function DonationPage() {
                   </tbody>
                 </table>
 
-                {/* Her zaman görünür bağış formu */}
-                <div style={{ marginTop: '30px', textAlign: 'left' }}>
-                  <label style={{ display: 'block', marginBottom: '10px' }}>
-                    <strong>Seçilen Okul:</strong>
-                    <input
-                      type="text"
-                      className="custom-amount"
-                      value={selectedSchool}
-                      placeholder="Okul adı yazın veya listeden seçin"
-                      onChange={(e) => setSelectedSchool(e.target.value)}
-                    />
-                  </label>
-
-                  <label style={{ display: 'block', marginBottom: '20px' }}>
-                    <strong>Bağış Adedi:</strong>
-                    <input
-                      type="number"
-                      min="1"
-                      className="custom-amount"
-                      value={donationCount}
-                      onChange={(e) =>
-                        setDonationCount(Math.max(0, Number(e.target.value)))
-                      }
-                    />
-                  </label>
-
-                  <button className="donate-confirm" onClick={handleDonationSubmit}>
-                    Bağış Yap
-                  </button>
-                </div>
+                <button className="donate-confirm" style={{ marginTop: '20px' }} onClick={handleDonationSubmit}>
+                  Bağış Yap
+                </button>
               </>
             )}
 
