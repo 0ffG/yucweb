@@ -30,7 +30,7 @@ export default function DonationPage() {
       alert('Lütfen okul seçin ve adet belirtin.');
       return;
     }
-    alert("${selectedSchool}" okuluna ${donationCount} adet "${inputItem}" bağışı yapılacak.);
+    alert(`${selectedSchool} okuluna ${donationCount} adet "${inputItem}" bağışı yapılacak.`);
   };
 
   return (
