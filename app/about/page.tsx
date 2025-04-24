@@ -1,7 +1,5 @@
 export default function AboutPage() {
-  return (
-    <div>
-      Merhaba
-    </div>
-  );
+  return <h1>About Sayfası – Güncellendi</h1>;
 }
+
+
