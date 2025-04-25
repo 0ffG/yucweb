@@ -30,14 +30,17 @@ export default function NavigationBar() {
 
         {/* Sağ: Bağlantılar */}
         <div className="flex items-center gap-4">
+          {/* Hakkımızda Butonu HER ZAMAN */}
+          <Link
+            href="/about"
+            className="px-6 py-2 rounded-full bg-white/80 text-gray-700 font-medium text-sm transition-all hover:shadow-md hover:bg-white"
+          >
+            Hakkımızda
+          </Link>
+
+          {/* Kullanıcı Durumuna Göre */}
           {!isLoggedIn ? (
             <>
-              <Link
-                href="/about"
-                className="px-6 py-2 rounded-full bg-white/80 text-gray-700 font-medium text-sm transition-all hover:shadow-md hover:bg-white"
-              >
-                Hakkımızda
-              </Link>
               <Link
                 href="/register"
                 className="px-6 py-2 rounded-full bg-white/80 border border-gray-200 text-gray-700 font-medium text-sm transition-all hover:shadow-md hover:bg-white"

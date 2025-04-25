@@ -1,6 +1,6 @@
 export default function AboutPage() {
 	return (
-		<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', textAlign: 'center' }}>
+		<div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', textAlign: 'center', background: 'linear-gradient(to bottom,#93c5fd, #86efac)' }}>
 			<div>
 				<h1 style={{ fontSize: '36px', marginBottom: '20px' }}>Hakkımızda</h1>
 				<p style={{ fontSize: '18px', lineHeight: '1.6', maxWidth: '600px' }}>
