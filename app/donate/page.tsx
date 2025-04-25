@@ -6,7 +6,7 @@ import needsData from '@/data/needsData';
 import Image from 'next/image';
 import CreditCard from '@/components/CreditCard';
 import '@/styles/donation.css';
-import { toast } from '@/hooks/use-toast'; // ✅ toast importu
+import { toast } from '@/hooks/use-toast';
 
 type DonationType = 'material' | 'money' | null;
 
@@ -142,30 +142,32 @@ export default function DonationPage() {
                   Bağış Yap
                 </button>
 
-                <table>
-                  <thead>
-                    <tr>
-                      <th>OKUL ADI</th>
-                      <th>İHTİYAÇ ADEDİ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredNeeds.map((entry, index) => (
-                      <tr
-                        key={index}
-                        style={{
-                          cursor: 'pointer',
-                          backgroundColor:
-                            selectedSchool === entry.school ? '#f1f1f1' : '',
-                        }}
-                        onClick={() => handleSchoolSelect(entry.school)}
-                      >
-                        <td>{entry.school}</td>
-                        <td>{entry.count}</td>
+                <div style={{ maxHeight: '300px', overflowY: 'auto', marginTop: '20px' }}>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>OKUL ADI</th>
+                        <th>İHTİYAÇ ADEDİ</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filteredNeeds.map((entry, index) => (
+                        <tr
+                          key={index}
+                          style={{
+                            cursor: 'pointer',
+                            backgroundColor:
+                              selectedSchool === entry.school ? '#f1f1f1' : '',
+                          }}
+                          onClick={() => handleSchoolSelect(entry.school)}
+                        >
+                          <td>{entry.school}</td>
+                          <td>{entry.count}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </>
             )}
 
@@ -229,7 +231,7 @@ export default function DonationPage() {
                 });
 
                 setTimeout(() => {
-                  window.location.href = '/'; // Redirect to profile page after delay
+                  window.location.href = '/';
                 }, 3000); // Delay of 3 seconds
               }}
             >

@@ -238,9 +238,10 @@ button:hover {
   
   .popup-content {
     background: white;
-    padding: 30px;
+    width: 90%; /* Increase width */
+    max-width: 500px; /* Set a max-width */
+    padding: 30px; /* Increase padding */
     border-radius: 16px;
-    width: 400px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     text-align: center;
     position: relative;
