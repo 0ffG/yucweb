@@ -20,16 +20,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="tr">
-      <body className={`${inter.className} bg-gradient-to-br from-green-300 to-blue-300`}>
-        <NavigationBar />
-        {children}
-        <footer className="py-8 bg-white/60">
-        <div className="container mx-auto px-6 text-center text-gray-500 text-sm">
-          © 2025 YUC. Tüm hakları saklıdır.
-        </div>
-      </footer>
+      <body className={`${inter.className} bg-white`}>
 
-      </body>
+  <NavigationBar />
+  {children}
+
+  <footer className="py-8 bg-gradient-to-br from-green-300 to-blue-300">
+    <div className="container mx-auto px-6 text-center text-gray-500 text-sm">
+      © 2025 YUC. Tüm hakları saklıdır.
+    </div>
+  </footer>
+</body>
+
     </html>
   );
 }
