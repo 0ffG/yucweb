@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "name": "YUC_Web",
+=======
+  "name": "YUC_web",
+>>>>>>> 5351e72743c8cf89cdf710036f577aba9113a8f0
   "version": "1.0.0",
   "private": true,
   "scripts": {
