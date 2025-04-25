@@ -1,24 +1,59 @@
-import Link from "next/link"
+"use client";
+
+import { FormEvent, useRef } from "react";
+import Link from "next/link";
 
 export default function AllSchoolsPage() {
+  const schools = [
+    "Örnek İlkokulu",
+    "Yeni Nesil Okulu",
+    "Umut Ortaokulu",
+    "Mutlu Ortaokulu",
+    "Dost İlkokulu",
+  ];
+
+  const schoolRefs = useRef<(HTMLLIElement | null)[]>([]);
+
+  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    const searchValue = (form.elements.namedItem("search") as HTMLInputElement).value.trim();
+    const index = schools.findIndex(
+      (school) => school.toLowerCase() === searchValue.toLowerCase()
+    );
+    if (index !== -1 && schoolRefs.current[index]) {
+      schoolRefs.current[index]?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   return (
     <div
       className="flex min-h-screen flex-col bg-cover bg-center bg-[url('/arkaplan.jpg')] bg-opacity-50"
     >
-      <header className="px-4 py-4 bg-white/80">
-        <h1 className="text-xl font-bold uppercase">OKUL PROFİLLERİ</h1>
-      </header>
-
       <main className="flex flex-1 flex-col items-center justify-center px-8 py-8">
+        <form onSubmit={handleSearch} className="mb-6 w-full max-w-2xl">
+          <input
+            type="text"
+            name="search"
+            placeholder="Okul adı ara..."
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            className="ml-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            Ara
+          </button>
+        </form>
+
         <ul className="space-y-6 w-full max-w-2xl">
-          {[
-            "Örnek İlkokulu",
-            "Yeni Nesil Okulu",
-            "Umut Ortaokulu",
-            "Mutlu Ortaokulu",
-            "Dost İlkokulu",
-          ].map((school, index) => (
-            <li key={index}>
+          {schools.map((school, index) => (
+            <li
+              key={index}
+              ref={(el) => {
+                schoolRefs.current[index] = el;
+              }}
+            >
               <Link
                 href={`/schools/${index + 1}`}
                 className="flex w-full items-center space-x-4 rounded-2xl border border-gray-300 bg-white px-6 py-4 shadow hover:bg-gray-100"
@@ -43,5 +78,5 @@ export default function AllSchoolsPage() {
         </ul>
       </main>
     </div>
-  )
+  );
 }

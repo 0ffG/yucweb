@@ -1,6 +1,14 @@
+"use client";
+
 import Link from "next/link"
+import { useState } from "react";
+
 
 export default function LoginPage() {
+
+  
+  const [showModal, setShowModal] = useState(false);
+
   return (
     <div className="flex min-h-screen flex-col bg-white">
       <main className="container flex flex-1 flex-col items-center justify-center px-4">
@@ -33,7 +41,7 @@ export default function LoginPage() {
                 </button>
               </div>
               <div className="flex flex-col items-center">
-                <button type="button" className="underline text-sm text-blue-800 hover:text-blue-950">
+                <button type="button" className="underline text-sm text-blue-800 hover:text-blue-950" onClick={() => setShowModal(true)}>
                   Şifremi unuttum
                 </button>
               </div>
@@ -48,6 +56,29 @@ export default function LoginPage() {
           </form>
         </div>
       </main>
+      {showModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-80">
+            <h3 className="text-lg font-bold mb-4">E-posta Adresinizi Girin</h3>
+            <input
+              type="email"
+              placeholder="E-posta"
+              className="w-full rounded-lg border border-gray-300 p-2 mb-4"
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                className="px-4 py-2 bg-gray-300 rounded-lg"
+                onClick={() => setShowModal(false)}
+              >
+                İptal
+              </button>
+              <button className="px-4 py-2 bg-blue-950 text-white rounded-lg">
+                Gönder
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

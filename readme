@@ -1,0 +1,13 @@
+// webdeki konsola
+// (navigation bardaki değişklikileri görmek için geçici kontrol)
+
+// user ile giriş
+ localStorage.setItem('user', JSON.stringify({ role: 'donor' }));
+
+
+// ADMİN İLE GİRİŞ
+localStorage.setItem('user', JSON.stringify({ role: 'admin' }));
+
+
+// ÇIKIŞ
+localStorage.removeItem('user');
