@@ -30,6 +30,7 @@ export default function DonationPage() {
       alert('Lütfen okul seçin ve adet belirtin.');
       return;
     }
+
     alert(`${selectedSchool} okuluna ${donationCount} adet "${inputItem}" bağışı yapılacak.`);
   };
 
@@ -39,7 +40,7 @@ export default function DonationPage() {
         <div className="logo-slogan-box">
           <div className="logo">
             <Image
-              src="/logo1.jpeg"
+              src="/logo2.jpeg"
               alt="Logo"
               width={100}
               height={100}
