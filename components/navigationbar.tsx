@@ -21,7 +21,7 @@ export default function NavigationBar() {
   return (
     <header className="sticky top-0 z-10 backdrop-blur-md bg-slate-900 w-full border-b border-slate-700">
       <div className="w-full px-6 py-4 flex items-center justify-between">
-        {/* Sol: Logo her zaman ekranın en solunda */}
+        {/* Sol: Logo */}
         <div className="flex items-center justify-start">
           <Link href="/" className="flex items-center">
             <YucLogo />
@@ -53,27 +53,22 @@ export default function NavigationBar() {
             </>
           ) : (
             <>
-              {isAdmin && (
+              {isAdmin ? (
                 <Link
                   href="/admin"
                   className="px-6 py-2 rounded-full bg-blue-600 text-white font-medium text-sm transition-all hover:shadow-md hover:bg-blue-500"
                 >
-                  Admin Paneli
+                  Yönetici Ekranı
                 </Link>
-              )}
-              <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-300">
-                {profileImage ? (
+              ) : (
+                <Link href="/donor" className="w-10 h-10 rounded-full overflow-hidden border border-gray-300">
                   <img
-                    src={profileImage}
+                    src={profileImage || '/pfpdefault.jpg'}
                     alt="Profile"
                     className="w-full h-full object-cover"
                   />
-                ) : (
-                  <div className="w-full h-full bg-gray-400 flex items-center justify-center text-white text-sm">
-                    ?
-                  </div>
-                )}
-              </div>
+                </Link>
+              )}
             </>
           )}
         </div>
