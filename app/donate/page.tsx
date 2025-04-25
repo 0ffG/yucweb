@@ -6,6 +6,7 @@ import needsData from '@/data/needsData';
 import Image from 'next/image';
 import CreditCard from '@/components/CreditCard';
 import '@/styles/donation.css';
+import { toast } from '@/hooks/use-toast'; // ✅ toast importu
 
 type DonationType = 'material' | 'money' | null;
 
@@ -27,18 +28,39 @@ export default function DonationPage() {
 
   const handleDonationSubmit = () => {
     if (!selectedSchool || !donationCount) {
-      alert('Lütfen okul seçin ve adet belirtin.');
+      toast({
+        type: 'error',
+        title: 'Eksik Bilgi',
+        description: 'Lütfen okul seçin ve adet belirtin.',
+        open: true,
+        onOpenChange: (open) => {
+          if (!open) {
+            // Handle toast close logic if needed
+          }
+        },
+      });
+
       return;
     }
-
-    alert(`${selectedSchool} okuluna ${donationCount} adet "${inputItem}" bağışı yapılacak.`);
+  
+    toast({
+      type: 'success',
+      title: 'Bağış Başarılı!',
+      description: `${selectedSchool} okuluna ${donationCount} adet "${inputItem}" bağışı yapılacak.`,
+      open: true,
+      onOpenChange: (open) => {
+        if (!open) {
+          // Handle toast close logic if needed
+        }
+      },
+    });
   };
 
   return (
     <>
       <div className="min-h-screen bg-white">
         <div className="logo-slogan-box">
-          <div className="logo">
+          <div className="logo" style={{ transform: 'scale(1.2)' }}>
             <Image
               src="/logo2.jpeg"
               alt="Logo"
@@ -77,35 +99,49 @@ export default function DonationPage() {
                   onChange={e => setInputItem(e.target.value)}
                 />
 
-                {/* Seçim ve Adet inputları buraya alındı */}
-                {/* Seçim ve Adet inputları buraya alındı ve ortalandı */}
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', marginBottom: '20px' }}>
-              <div style={{ textAlign: 'left' }}>
-                <label style={{ display: 'block', marginBottom: '10px' }}>
-                  <strong>Seçilen Okul:</strong>
-                  <input
-                    type="text"
-                    className="custom-amount"
-                    value={selectedSchool}
-                    placeholder="Okul adı yazın veya listeden seçin"
-                    onChange={(e) => setSelectedSchool(e.target.value)}
-                  />
-                </label>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    marginTop: '20px',
+                    marginBottom: '20px',
+                  }}
+                >
+                  <div style={{ textAlign: 'left' }}>
+                    <label style={{ display: 'block', marginBottom: '10px' }}>
+                      <strong>Seçilen Okul:</strong>
+                      <input
+                        type="text"
+                        className="custom-amount"
+                        value={selectedSchool}
+                        placeholder="Okul adı yazın veya listeden seçin"
+                        onChange={(e) => setSelectedSchool(e.target.value)}
+                      />
+                    </label>
 
-                <label style={{ display: 'block', marginBottom: '10px' }}>
-                  <strong>Bağış Adedi:</strong>
-                  <input
-                    type="number"
-                    min="1"
-                    className="custom-amount"
-                    value={donationCount}
-                    onChange={(e) =>
-                      setDonationCount(Math.max(0, Number(e.target.value)))
-                    }
-                  />
-                </label>
-              </div>
-            </div>
+                    <label style={{ display: 'block', marginBottom: '10px' }}>
+                      <strong>Bağış Adedi:</strong>
+                      <input
+                        type="number"
+                        min="1"
+                        className="custom-amount"
+                        value={donationCount}
+                        onChange={(e) =>
+                          setDonationCount(Math.max(0, Number(e.target.value)))
+                        }
+                      />
+                    </label>
+                  </div>
+                </div>
+
+                <button
+                  className="donate-confirm"
+                  style={{ marginTop: '20px' }}
+                  onClick={handleDonationSubmit}
+                >
+                  Bağış Yap
+                </button>
+
                 <table>
                   <thead>
                     <tr>
@@ -130,10 +166,6 @@ export default function DonationPage() {
                     ))}
                   </tbody>
                 </table>
-
-                <button className="donate-confirm" style={{ marginTop: '20px' }} onClick={handleDonationSubmit}>
-                  Bağış Yap
-                </button>
               </>
             )}
 
@@ -141,16 +173,22 @@ export default function DonationPage() {
               <>
                 <h3>YOUR SINGLE DONATION</h3>
                 <div className="donation-options">
-                  <button className="amount-btn" onClick={() => setAmount(100)}>100₺</button>
-                  <button className="amount-btn" onClick={() => setAmount(300)}>300₺</button>
-                  <button className="amount-btn" onClick={() => setAmount('')}>DİĞER</button>
+                  <button className="amount-btn" onClick={() => setAmount(100)}>
+                    100₺
+                  </button>
+                  <button className="amount-btn" onClick={() => setAmount(300)}>
+                    300₺
+                  </button>
+                  <button className="amount-btn" onClick={() => setAmount('')}>
+                    DİĞER
+                  </button>
                 </div>
                 <input
                   type="number"
                   className="custom-amount"
                   placeholder="Tutar giriniz"
                   value={amount}
-                  onChange={e => setAmount(e.target.value)}
+                  onChange={(e) => setAmount(e.target.value)}
                 />
                 <button
                   className="donate-confirm"
@@ -175,8 +213,34 @@ export default function DonationPage() {
               <input className="popup-input half" placeholder="CVV" />
             </div>
 
-            <button className="popup-confirm">Ödemeyi Onayla</button>
-            <button onClick={() => setShowPaymentPopup(false)} className="popup-cancel">İptal</button>
+            <button
+              className="popup-confirm"
+              onClick={() => {
+                toast({
+                  type: 'success',
+                  title: 'Ödeme Alındı',
+                  description: 'Ödemeniz başarıyla alındı.',
+                  open: true,
+                  onOpenChange: (open) => {
+                    if (!open) {
+                      // Handle toast close logic if needed
+                    }
+                  },
+                });
+
+                setTimeout(() => {
+                  window.location.href = '/'; // Redirect to profile page after delay
+                }, 3000); // Delay of 3 seconds
+              }}
+            >
+              Ödemeyi Onayla
+            </button>
+            <button
+              onClick={() => setShowPaymentPopup(false)}
+              className="popup-cancel"
+            >
+              İptal
+            </button>
           </div>
         </div>
       )}
