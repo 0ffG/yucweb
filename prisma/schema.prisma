@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {model User {
+  id        Int        @id @default(autoincrement())
+  name      String
+  email     String     @unique
+  password  String
+  role      Role
+  photo     String? 
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  donations Donation[] @relation("DonorDonations")
+  received  Donation[] @relation("SchoolDonations")
+}
+
+model Donation {
+  id           Int      @id @default(autoincrement())
+  donorId      Int
+  schoolId     Int
+  amount       Float
+  donationType DonationType
+  description  String?
+  createdAt    DateTime @default(now())
+
+  donor  User @relation("DonorDonations", fields: [donorId], references: [id])
+  school User @relation("SchoolDonations", fields: [schoolId], references: [id])
+}
+
+enum Role {
+  admin
+  donor
+  school
+}
+
+enum DonationType {
+  money
+  goods
+}
