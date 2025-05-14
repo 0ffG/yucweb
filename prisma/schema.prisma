@@ -33,6 +33,13 @@ model Donation {
   school User @relation("SchoolDonations", fields: [schoolId], references: [id])
 }
 
+model news {
+  id         Int    
+  title      Int
+  image 
+
+}
+
 enum Role {
   admin
   donor

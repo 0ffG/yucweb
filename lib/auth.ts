@@ -6,7 +6,12 @@ if (!SECRET) {
   throw new Error('JWT_SECRET is not defined in environment variables');
 }
 
-export function generateToken(payload: object) {
+type TokenPayload = {
+  userId: number;
+  role: 'admin' | 'donor' | 'school';
+};
+
+export function generateToken(payload: TokenPayload) {
   return jwt.sign(payload, SECRET, { expiresIn: '7d' });
 }
 
