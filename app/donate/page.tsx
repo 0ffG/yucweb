@@ -1,206 +1,279 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { YucLogo } from '@/components/yuc-logo';
-import needsData from '@/data/needsData';
 import Image from 'next/image';
 import CreditCard from '@/components/CreditCard';
 import '@/styles/donation.css';
 import { toast } from '@/hooks/use-toast';
 
-type DonationType = 'material' | 'money' | null;
-
 export default function DonationPage() {
-  const [donationType, setDonationType] = useState<DonationType>(null);
+  const [donationType, setDonationType] = useState<'material' | 'money' | null>(null);
   const [inputItem, setInputItem] = useState('');
   const [amount, setAmount] = useState<string | number>('');
-  const [selectedSchool, setSelectedSchool] = useState<string>('');
+  const [selectedSchool, setSelectedSchool] = useState('');
   const [donationCount, setDonationCount] = useState<number>(0);
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
+  const [filteredNeeds, setFilteredNeeds] = useState<Need[]>([]);
 
-  const filteredNeeds = needsData
-    .filter(entry => entry.item.toLowerCase() === inputItem.toLowerCase())
-    .sort((a, b) => b.count - a.count);
+  const userId = 1; // TODO: Oturumdan al
+
+  interface Need {
+    school: string;
+    item: string;
+    count: number;
+  }
+
+  useEffect(() => {
+    const fetchNeeds = async () => {
+      if (!inputItem.trim()) {
+        setFilteredNeeds([]);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/needs?item=${encodeURIComponent(inputItem)}`);
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        setFilteredNeeds(data);
+      } catch {
+        toast({
+          type: 'error',
+          title: 'Hata',
+          description: 'İhtiyaçlar alınamadı.',
+          open: true,
+          onOpenChange: () => {},
+        });
+      }
+    };   
+
+    fetchNeeds();
+  }, [inputItem]);
 
   const handleSchoolSelect = (schoolName: string) => {
     setSelectedSchool(schoolName);
   };
 
-  const handleDonationSubmit = () => {
-    if (!selectedSchool || !donationCount) {
+  const handleDonationSubmit = async () => {
+    if (!selectedSchool || !donationCount || !inputItem) {
       toast({
         type: 'error',
         title: 'Eksik Bilgi',
-        description: 'Lütfen okul seçin ve adet belirtin.',
+        description: 'Lütfen okul, eşya ve adet bilgilerini doldurun.',
         open: true,
-        onOpenChange: (open) => {
-          if (!open) {
-            // Handle toast close logic if needed
-          }
-        },
+        onOpenChange: () => {},
       });
-
       return;
     }
-  
-    toast({
-      type: 'success',
-      title: 'Bağış Başarılı!',
-      description: `${selectedSchool} okuluna ${donationCount} adet "${inputItem}" bağışı yapılacak.`,
-      open: true,
-      onOpenChange: (open) => {
-        if (!open) {
-          // Handle toast close logic if needed
-        }
-      },
-    });
+
+    try {
+      const res = await fetch('/api/donate-material', {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          schoolName: selectedSchool,
+          itemName: inputItem,
+          count: donationCount,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast({
+          type: 'error',
+          title: 'Bağış Başarısız',
+          description: data.error || 'Bir hata oluştu.',
+          open: true,
+          onOpenChange: () => {},
+        });
+        return;
+      }
+
+      toast({
+        type: 'success',
+        title: 'Bağış Başarılı!',
+        description: `${selectedSchool} okuluna ${donationCount} adet "${inputItem}" bağışı yapıldı.`,
+        open: true,
+        onOpenChange: () => {},
+      });
+
+      setFilteredNeeds(prev =>
+        prev.map(need =>
+          need.school === selectedSchool && need.item.toLowerCase() === inputItem.toLowerCase()
+            ? { ...need, count: need.count - donationCount }
+            : need
+        )
+      );
+
+      setDonationCount(0);
+    } catch (err) {
+      toast({
+        type: 'error',
+        title: 'Sunucu Hatası',
+        description: 'Bağış yapılırken bir sorun oluştu.',
+        open: true,
+        onOpenChange: () => {},
+      });
+    }
+  };
+
+  const handleMoneyDonation = async () => {
+    if (!amount || Number(amount) <= 0) {
+      toast({
+        type: 'error',
+        title: 'Geçersiz Tutar',
+        description: 'Lütfen geçerli bir bağış miktarı girin.',
+        open: true,
+        onOpenChange: () => {},
+      });
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/donate-money', {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId,
+          amount: Number(amount),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast({
+          type: 'error',
+          title: 'Bağış Başarısız',
+          description: data.error || 'Bir hata oluştu.',
+          open: true,
+          onOpenChange: () => {},
+        });
+        return;
+      }
+
+      toast({
+        type: 'success',
+        title: 'Ödeme Alındı',
+        description: `Bağışınız başarıyla işlendi: ${amount}₺`,
+        open: true,
+        onOpenChange: () => {},
+      });
+
+      setTimeout(() => window.location.href = '/', 3000);
+    } catch (err) {
+      toast({
+        type: 'error',
+        title: 'Sunucu Hatası',
+        description: 'Bağış işlenemedi.',
+        open: true,
+        onOpenChange: () => {},
+      });
+    }
   };
 
   return (
-    <>
-      <div className="min-h-screen bg-white">
-        <div className="logo-slogan-box">
-          <div className="logo" style={{ transform: 'scale(1.2)' }}>
-            <Image
-              src="/logo2.jpeg"
-              alt="Logo"
-              width={100}
-              height={100}
-              className="site-icon"
-            />
-          </div>
-          <div className="slogan">Bir çocuk daha mutlu olsun!</div>
+    <div className="min-h-screen bg-white">
+      <div className="logo-slogan-box">
+        <div className="logo" style={{ transform: 'scale(1.2)' }}>
+          <Image src="/logo2.jpeg" alt="Logo" width={100} height={100} className="site-icon" />
         </div>
+        <div className="slogan">Bir çocuk daha mutlu olsun!</div>
+      </div>
 
-        <div className="button-group">
-          <button
-            className="donate-btn item"
-            onClick={() => setDonationType('material')}
-          >
-            MALZEME YARDIMI
-          </button>
-          <button
-            className="donate-btn money"
-            onClick={() => setDonationType('money')}
-          >
-            PARA YARDIMI
-          </button>
-        </div>
-        <hr />
-        <div className="dynamic-section">
-          <div className="card">
-            {donationType === 'material' && (
-              <>
-                <h3>YARDIM YAPMAK İSTEDİĞİNİZ EŞYAYI GİRİNİZ</h3>
-                <input
-                  className="custom-amount"
-                  placeholder="Yardım yapmak istediğiniz eşyayı giriniz"
-                  value={inputItem}
-                  onChange={e => setInputItem(e.target.value)}
-                />
+      <div className="button-group">
+        <button className="donate-btn item" onClick={() => setDonationType('material')}>MALZEME YARDIMI</button>
+        <button className="donate-btn money" onClick={() => setDonationType('money')}>PARA YARDIMI</button>
+      </div>
 
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    marginTop: '20px',
-                    marginBottom: '20px',
-                  }}
-                >
-                  <div style={{ textAlign: 'left' }}>
-                    <label style={{ display: 'block', marginBottom: '10px' }}>
-                      <strong>Seçilen Okul:</strong>
-                      <input
-                        type="text"
-                        className="custom-amount"
-                        value={selectedSchool}
-                        placeholder="Okul adı yazın veya listeden seçin"
-                        onChange={(e) => setSelectedSchool(e.target.value)}
-                      />
-                    </label>
+      <hr />
 
-                    <label style={{ display: 'block', marginBottom: '10px' }}>
-                      <strong>Bağış Adedi:</strong>
-                      <input
-                        type="number"
-                        min="1"
-                        className="custom-amount"
-                        value={donationCount}
-                        onChange={(e) =>
-                          setDonationCount(Math.max(0, Number(e.target.value)))
-                        }
-                      />
-                    </label>
-                  </div>
+      <div className="dynamic-section">
+        <div className="card">
+          {donationType === 'material' && (
+            <>
+              <h3>YARDIM YAPMAK İSTEDİĞİNİZ EŞYAYI GİRİNİZ</h3>
+              <input
+                className="custom-amount"
+                placeholder="Yardım yapmak istediğiniz eşyayı giriniz"
+                value={inputItem}
+                onChange={e => setInputItem(e.target.value)}
+              />
+
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', marginBottom: '20px' }}>
+                <div style={{ textAlign: 'left' }}>
+                  <label style={{ display: 'block', marginBottom: '10px' }}>
+                    <strong>Seçilen Okul:</strong>
+                    <input
+                      type="text"
+                      className="custom-amount"
+                      value={selectedSchool}
+                      placeholder="Okul adı yazın veya listeden seçin"
+                      onChange={(e) => setSelectedSchool(e.target.value)}
+                    />
+                  </label>
+                  <label style={{ display: 'block', marginBottom: '10px' }}>
+                    <strong>Bağış Adedi:</strong>
+                    <input
+                      type="number"
+                      min="1"
+                      className="custom-amount"
+                      value={donationCount}
+                      onChange={(e) => setDonationCount(Math.max(0, Number(e.target.value)))}
+                    />
+                  </label>
                 </div>
+              </div>
 
-                <button
-                  className="donate-confirm"
-                  style={{ marginTop: '20px' }}
-                  onClick={handleDonationSubmit}
-                >
-                  Bağış Yap
-                </button>
+              <button className="donate-confirm" style={{ marginTop: '20px' }} onClick={handleDonationSubmit}>
+                Bağış Yap
+              </button>
 
-                <div style={{ maxHeight: '300px', overflowY: 'auto', marginTop: '20px' }}>
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>OKUL ADI</th>
-                        <th>İHTİYAÇ ADEDİ</th>
+              <div style={{ maxHeight: '300px', overflowY: 'auto', marginTop: '20px' }}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>OKUL ADI</th>
+                      <th>İHTİYAÇ ADEDİ</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredNeeds.map((entry, index) => (
+                      <tr
+                        key={index}
+                        style={{ cursor: 'pointer', backgroundColor: selectedSchool === entry.school ? '#f1f1f1' : '' }}
+                        onClick={() => handleSchoolSelect(entry.school)}
+                      >
+                        <td>{entry.school}</td>
+                        <td>{entry.count}</td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {filteredNeeds.map((entry, index) => (
-                        <tr
-                          key={index}
-                          style={{
-                            cursor: 'pointer',
-                            backgroundColor:
-                              selectedSchool === entry.school ? '#f1f1f1' : '',
-                          }}
-                          onClick={() => handleSchoolSelect(entry.school)}
-                        >
-                          <td>{entry.school}</td>
-                          <td>{entry.count}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </>
-            )}
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
 
-            {donationType === 'money' && (
-              <>
-                <h3>YOUR SINGLE DONATION</h3>
-                <div className="donation-options">
-                  <button className="amount-btn" onClick={() => setAmount(100)}>
-                    100₺
-                  </button>
-                  <button className="amount-btn" onClick={() => setAmount(300)}>
-                    300₺
-                  </button>
-                  <button className="amount-btn" onClick={() => setAmount('')}>
-                    DİĞER
-                  </button>
-                </div>
-                <input
-                  type="number"
-                  className="custom-amount"
-                  placeholder="Tutar giriniz"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                />
-                <button
-                  className="donate-confirm"
-                  onClick={() => setShowPaymentPopup(true)}
-                >
-                  Ödemeyi Bitir
-                </button>
-              </>
-            )}
-          </div>
+          {donationType === 'money' && (
+            <>
+              <h3>YOUR SINGLE DONATION</h3>
+              <div className="donation-options">
+                <button className="amount-btn" onClick={() => setAmount(100)}>100₺</button>
+                <button className="amount-btn" onClick={() => setAmount(300)}>300₺</button>
+                <button className="amount-btn" onClick={() => setAmount('')}>DİĞER</button>
+              </div>
+              <input
+                type="number"
+                className="custom-amount"
+                placeholder="Tutar giriniz"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+              <button className="donate-confirm" onClick={() => setShowPaymentPopup(true)}>
+                Ödemeyi Bitir
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -214,38 +287,18 @@ export default function DonationPage() {
               <input className="popup-input half" placeholder="MM/YY" />
               <input className="popup-input half" placeholder="CVV" />
             </div>
-
             <button
               className="popup-confirm"
-              onClick={() => {
-                toast({
-                  type: 'success',
-                  title: 'Ödeme Alındı',
-                  description: 'Ödemeniz başarıyla alındı.',
-                  open: true,
-                  onOpenChange: (open) => {
-                    if (!open) {
-                      // Handle toast close logic if needed
-                    }
-                  },
-                });
-
-                setTimeout(() => {
-                  window.location.href = '/';
-                }, 3000); // Delay of 3 seconds
-              }}
+              onClick={handleMoneyDonation}
             >
               Ödemeyi Onayla
             </button>
-            <button
-              onClick={() => setShowPaymentPopup(false)}
-              className="popup-cancel"
-            >
+            <button onClick={() => setShowPaymentPopup(false)} className="popup-cancel">
               İptal
             </button>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

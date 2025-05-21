@@ -1,42 +1,62 @@
 "use client";
 
-import { FormEvent, useRef } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
+interface School {
+  id: number;
+  name: string;
+}
+
 export default function AllSchoolsPage() {
-  const schools = [
-    "Örnek İlkokulu",
-    "Yeni Nesil Okulu",
-    "Umut Ortaokulu",
-    "Mutlu Ortaokulu",
-    "Dost İlkokulu",
-  ];
+  const [schools, setSchools] = useState<School[]>([]);
+  const [filteredSchools, setFilteredSchools] = useState<School[] | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-  const schoolRefs = useRef<(HTMLLIElement | null)[]>([]);
+  // SQL'den okul verilerini al
+  useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        const res = await fetch("/api/schools", { credentials: "include" });
+        const data = await res.json();
+        setSchools(data);
+      } catch (err) {
+        console.error("Okullar alınamadı:", err);
+      }
+    };
+    fetchSchools();
+  }, []);
 
-  const handleSearch = (event: FormEvent<HTMLFormElement>) => {
+  // Arama formu gönderildiğinde
+  const handleSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const form = event.currentTarget;
-    const searchValue = (form.elements.namedItem("search") as HTMLInputElement).value.trim();
-    const index = schools.findIndex(
-      (school) => school.toLowerCase() === searchValue.toLowerCase()
-    );
-    if (index !== -1 && schoolRefs.current[index]) {
-      schoolRefs.current[index]?.scrollIntoView({ behavior: "smooth" });
+    const query = searchTerm.trim().toLowerCase();
+
+    if (!query) {
+      setFilteredSchools(null);
+      return;
     }
+
+    const matched = schools.filter((school) =>
+      school.name.toLowerCase().includes(query)
+    );
+    setFilteredSchools(matched.length ? matched : []);
   };
 
+  // Gösterilecek okulları belirle
+  const displayedSchools = filteredSchools ?? schools;
+
   return (
-    <div
-      className="flex min-h-screen flex-col bg-cover bg-center bg-[url('/arkaplan.jpg')] bg-opacity-50"
-    >
+    <div className="flex min-h-screen flex-col bg-cover bg-center bg-[url('/arkaplan.jpg')]">
       <main className="flex flex-1 flex-col items-center justify-center px-8 py-8">
-        <form onSubmit={handleSearch} className="mb-6 w-full max-w-2xl">
+        <form onSubmit={handleSearch} className="mb-6 w-full max-w-2xl flex">
           <input
             type="text"
             name="search"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Okul adı ara..."
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-grow px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
             type="submit"
@@ -46,36 +66,33 @@ export default function AllSchoolsPage() {
           </button>
         </form>
 
-        <ul className="space-y-6 w-full max-w-2xl">
-          {schools.map((school, index) => (
-            <li
-              key={index}
-              ref={(el) => {
-                schoolRefs.current[index] = el;
-              }}
-            >
-              <Link
-                href={`/schools/${index + 1}`}
-                className="flex w-full items-center space-x-4 rounded-2xl border border-gray-300 bg-white px-6 py-4 shadow hover:bg-gray-100"
-              >
-                {/* Sol tarafta resim */}
-                <div className="h-20 w-20 flex-shrink-0 rounded bg-gray-200">
-                  <img
-                    src="/classroom.jpg"
-                    alt={`${school} resmi`}
-                    className="h-full w-full rounded object-cover"
-                  />
-                </div>
-                {/* Okul adı ve yazı */}
-                <div className="flex flex-col flex-grow">
-                  <span className="text-lg font-bold text-black">{school}</span>
-                  <span className="text-sm text-gray-700">Profili Gör</span>
-                </div>
-                <div className="text-gray-500">&gt;</div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {displayedSchools.length === 0 ? (
+          <p className="text-white">Okul bulunamadı.</p>
+        ) : (
+          <ul className="space-y-6 w-full max-w-2xl">
+            {displayedSchools.map((school) => (
+              <li key={school.id}>
+                <Link
+                  href={`/schools/${school.id}`}
+                  className="flex w-full items-center space-x-4 rounded-2xl border border-gray-300 bg-white px-6 py-4 shadow hover:bg-gray-100"
+                >
+                  <div className="h-20 w-20 flex-shrink-0 rounded bg-gray-200">
+                    <img
+                      src="/classroom.jpg"
+                      alt={`${school.name} resmi`}
+                      className="h-full w-full rounded object-cover"
+                    />
+                  </div>
+                  <div className="flex flex-col flex-grow">
+                    <span className="text-lg font-bold text-black">{school.name}</span>
+                    <span className="text-sm text-gray-700">Profili Gör</span>
+                  </div>
+                  <div className="text-gray-500">&gt;</div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </main>
     </div>
   );

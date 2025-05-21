@@ -1,19 +1,20 @@
 //README.md
 
--> Before running, don't forget to run npm install
-npm install
+-database bilgi aktar 
+node prisma/seed.js
 
 
--> In the web console
- (Temporary control to see changes in the navigation bar)
+-database tablo pushlama prisma ile
+npx prisma db push
 
- Login as user
- localStorage.setItem('user', JSON.stringify({ role: 'donor' }));
+-database bakma arayüz
+npx prisma studio
+
+-database e terminalden bağlan
+psql -U goktugtutar -h localhost -p 5432 yucweb
 
 
- Login as admin
-localStorage.setItem('user', JSON.stringify({ role: 'admin' }));
 
+----eksikler----
 
- Logout
-localStorage.removeItem('user');
+donation yapildiginda donationlar veritabanina kayit edilmiyor ama kullanicin hesabinda gozukuyor toplam ne kadar para yardim ettigi artiyor mesela

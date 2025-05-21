@@ -1,64 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
+import { jwtVerify } from 'jose';
 
-const SECRET = process.env.JWT_SECRET as string;
+const SECRET = new TextEncoder().encode(process.env.JWT_SECRET as string);
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = request.cookies.get('token')?.value;
 
-  // Admin Panel Erişim Kontrolü
   if (pathname.startsWith('/admin')) {
     if (!token) {
+      // Token yoksa login sayfasına yönlendir
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
     try {
-      const payload = jwt.verify(token, SECRET) as { role?: string };
+      const { payload } = await jwtVerify(token, SECRET);
 
       if (payload.role !== 'admin') {
-        return NextResponse.redirect(new URL('/unauthorized', request.url));
+        // Yetkisiz rol ana sayfaya yönlendir
+        return NextResponse.redirect(new URL('/', request.url));
       }
 
       return NextResponse.next();
     } catch (err) {
+      // Token doğrulama hatası login sayfasına yönlendir
       return NextResponse.redirect(new URL('/login', request.url));
     }
   }
-  // Okul Profili Erişim Kontrolü
-// if (pathname.startsWith('/schools/')) {
-//   const urlParts = pathname.split('/');
-//   const schoolId = urlParts[2]; // /schools/5/edit -> '5'
-//   const isEditPage = pathname.endsWith('/edit');
 
-//   if (isEditPage) {
-//     const token = request.cookies.get('token')?.value;
-
-//     if (!token) {
-//       return NextResponse.redirect(new URL('/login', request.url));
-//     }
-
-//     try {
-//       const payload = jwt.verify(token, SECRET) as { id?: string, managedSchoolId?: string };
-//       //token ekleninince bu kismi kontrol et
-//       // Eğer yetkisi yoksa, edit sayfasına değil, profil sayfasına yönlendir ve hata mesajı ekle
-//       if (payload.managedSchoolId !== schoolId) {
-//         const url = request.nextUrl;
-//         // /schools/5/edit -> /schools/5?error=not-authorized
-//         url.pathname = `/schools/${schoolId}`;
-//         url.searchParams.set('error', 'not-authorized');
-//         return NextResponse.redirect(url);
-//       }
-
-//     } catch (err) {
-//       return NextResponse.redirect(new URL('/login', request.url));
-//     }
-//   }
-
-  // Eğer edit değilse (sadece görüntüleme ise), herkes görebilir
   return NextResponse.next();
 }
 
-
-
-
+export const config = {
+  matcher: ['/admin/:path*']
+};

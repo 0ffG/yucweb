@@ -7,18 +7,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {model User {
-  id        Int        @id @default(autoincrement())
+enum Role {
+  admin
+  donor
+  school
+}
+
+enum DonationType {
+  money
+  goods
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
   name      String
-  email     String     @unique
+  lastName  String
+  email     String    @unique
   password  String
   role      Role
-  photo     String? 
+  totalMoneyDonated     Int      @default(0)
+  totalSaplingsDonated  Int      @default(0)
+  photo     String?
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
+
   donations Donation[] @relation("DonorDonations")
   received  Donation[] @relation("SchoolDonations")
+  inventories Inventory[]
+
+  materialDonationsSent     MaterialDonation[] @relation("UserToMaterialDonation")
+  materialDonationsReceived MaterialDonation[] @relation("SchoolToMaterialDonation")
 }
+
 
 model Donation {
   id           Int      @id @default(autoincrement())
@@ -33,20 +53,29 @@ model Donation {
   school User @relation("SchoolDonations", fields: [schoolId], references: [id])
 }
 
-model news {
-  id         Int    
-  title      Int
-  image 
+model Inventory {
+  id        Int    @id @default(autoincrement())  // Inventory kaydı için kendi ID'si
+  schoolId  Int                                   // Hangi okul (User) ile ilişkili
+  item      String
+  count     Int
+
+  school    User   @relation(fields: [schoolId], references: [id])
+}
+
+
+model News {
+  id         Int @id @default(autoincrement())   
+  title      String
+  image      String? 
 
 }
 
-enum Role {
-  admin
-  donor
-  school
+model MaterialDonation {
+  id        Int  @id @default(autoincrement())
+  userId    Int
+  schoolId  Int
+
+  user      User @relation("UserToMaterialDonation", fields: [userId], references: [id])
+  school    User @relation("SchoolToMaterialDonation", fields: [schoolId], references: [id])
 }
 
-enum DonationType {
-  money
-  goods
-}
