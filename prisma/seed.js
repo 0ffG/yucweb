@@ -25,13 +25,13 @@ async function main() {
   const donors = await prisma.user.findMany({ where: { role: "donor" } });
   const schools = await prisma.user.findMany({ where: { role: "school" } });
 
-  // DONATIONS
+  // DONATIONS (money & goods)
   for (let i = 0; i < 10; i++) {
     await prisma.donation.create({
       data: {
         donorId: donors[i % donors.length].id,
         schoolId: schools[i % schools.length].id,
-        amount: Math.floor(Math.random() * 9000 + 1000),
+        amount: parseFloat((Math.random() * 9000 + 1000).toFixed(2)), // Float
         donationType: i % 2 === 0 ? "money" : "goods",
         description: `Donation ${i + 1}`
       }
