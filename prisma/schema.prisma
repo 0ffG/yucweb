@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql" // PostgreSQL kullanıyorsan "postgresql" yap
   url      = env("DATABASE_URL")
 }
 
@@ -13,69 +13,65 @@ enum Role {
   school
 }
 
-enum DonationType {
-  money
-  goods
-}
-
 model User {
-  id        Int       @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   name      String
-  lastName  String
-  email     String    @unique
+  email     String  @unique
   password  String
   role      Role
-  totalMoneyDonated     Int      @default(0)
-  totalSaplingsDonated  Int      @default(0)
-  photo     String?
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  donations Donation[] @relation("DonorDonations")
-  received  Donation[] @relation("SchoolDonations")
-  inventories Inventory[]
-
-  materialDonationsSent     MaterialDonation[] @relation("UserToMaterialDonation")
-  materialDonationsReceived MaterialDonation[] @relation("SchoolToMaterialDonation")
-}
-
-
-model Donation {
-  id           Int      @id @default(autoincrement())
-  donorId      Int
-  schoolId     Int
-  amount       Float
-  donationType DonationType
-  description  String?
-  createdAt    DateTime @default(now())
-
-  donor  User @relation("DonorDonations", fields: [donorId], references: [id])
-  school User @relation("SchoolDonations", fields: [schoolId], references: [id])
+  materialSent       MaterialDonation[]   @relation("DonorMaterialDonations")
+  materialReceived   MaterialDonation[]   @relation("SchoolMaterialDonations")
+  inventories        Inventory[]
+  moneyDonations     MoneyDonation[]
+  moneyDistributions MoneyDistribution[]  @relation("SchoolDistributions")
 }
 
 model Inventory {
-  id        Int    @id @default(autoincrement())  // Inventory kaydı için kendi ID'si
-  schoolId  Int                                   // Hangi okul (User) ile ilişkili
+  id        Int    @id @default(autoincrement())
   item      String
-  count     Int
-
+  amount    Int
+  schoolId  Int
   school    User   @relation(fields: [schoolId], references: [id])
 }
 
+model MoneyDonation {
+  id         Int      @id @default(autoincrement())
+  amount     Int
+  donorId    Int
+  createdAt  DateTime @default(now())
 
-model News {
-  id         Int @id @default(autoincrement())   
-  title      String
-  image      String? 
+  donor        User               @relation(fields: [donorId], references: [id])
+  distributions MoneyDistribution[]
+}
 
+model MoneyDistribution {
+  id              Int      @id @default(autoincrement())
+  amount          Int
+  createdAt       DateTime @default(now())
+  moneyDonationId Int?     // isteğe bağlı
+  schoolId        Int
+
+  moneyDonation   MoneyDonation? @relation(fields: [moneyDonationId], references: [id])
+  school          User           @relation("SchoolDistributions", fields: [schoolId], references: [id])
 }
 
 model MaterialDonation {
-  id        Int  @id @default(autoincrement())
-  userId    Int
-  schoolId  Int
+  id         Int      @id @default(autoincrement())
+  item       String
+  amount     Int
+  donorId    Int
+  schoolId   Int
+  createdAt  DateTime @default(now())
 
-  user      User @relation("UserToMaterialDonation", fields: [userId], references: [id])
-  school    User @relation("SchoolToMaterialDonation", fields: [schoolId], references: [id])
+  donor      User     @relation("DonorMaterialDonations", fields: [donorId], references: [id])
+  school     User     @relation("SchoolMaterialDonations", fields: [schoolId], references: [id])
 }
 
+model News {
+  id     Int    @id @default(autoincrement())
+  title  String
+  image  String?
+}
