@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     const response = needs.map(n => ({
       school: n.school.name,
       item: n.item,
-      count: n.count,
+      count: n.amount,
     }));
 
     return NextResponse.json(response, { status: 200 });

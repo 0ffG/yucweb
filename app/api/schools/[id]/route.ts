@@ -26,7 +26,7 @@ export async function GET(
           select: {
             id:true,
             item: true,
-            count: true,
+            amount: true,
           },
         },
       },
@@ -43,7 +43,7 @@ export async function GET(
       needs: school.inventories.map((inv) => ({
         id: inv.id,
         name: inv.item,
-        quantity: inv.count,
+        quantity: inv.amount,
       })),
     });
   } catch (error) {

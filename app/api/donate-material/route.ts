@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth';
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { verifyToken } from "@/lib/auth";
+import { cookies } from "next/headers";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -10,12 +11,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Eksik veya geçersiz veri." }, { status: 400 });
   }
 
-  const token = req.cookies.get("token")?.value;
+  const token = cookies().get("token")?.value;
   if (!token) {
     return NextResponse.json({ error: "Giriş yapılmamış." }, { status: 403 });
   }
 
-  let user: { userId: number; role: string } | null;
+  let user;
   try {
     user = verifyToken(token);
     if (!user) {
@@ -52,23 +53,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Bu ürün okulun ihtiyacında yok." }, { status: 404 });
     }
 
-    if (inventory.count < count) {
+    if (inventory.amount < count) {
       return NextResponse.json({ error: "Bağış miktarı ihtiyaçtan fazla olamaz." }, { status: 400 });
     }
 
-    // 1️⃣ İhtiyaç sayısını düşür
+    // İhtiyaç sayısını düşür
     await prisma.inventory.update({
       where: { id: inventory.id },
       data: {
-        count: { decrement: count },
+        amount: { decrement: count },
       },
     });
 
-    // 2️⃣ MaterialDonation tablosuna bağışı kaydet
+    // MaterialDonation kaydı oluştur
     await prisma.materialDonation.create({
       data: {
-        userId: user.userId,
+        donorId: user.userId,
         schoolId: school.id,
+        item: itemName,
+        amount: count,
       },
     });
 

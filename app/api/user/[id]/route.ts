@@ -17,30 +17,25 @@ export async function GET(
     return NextResponse.json({ error: "Yetkisiz. Giriş yapınız." }, { status: 403 });
   }
 
-  let payload;
-  try {
-    payload = verifyToken(token); // { userId, role }
-  } catch (err) {
-    return NextResponse.json({ error: "Token geçersiz." }, { status: 403 });
-  }
-
-  if (payload.userId !== requestedId || payload.role !== "donor") {
+  const payload = verifyToken(token);
+  if (!payload || payload.userId !== requestedId || payload.role !== "donor") {
     return NextResponse.json({ error: "Yetkisiz erişim." }, { status: 403 });
   }
 
   const user = await prisma.user.findUnique({
     where: { id: requestedId },
     include: {
-      materialDonationsSent: {
+      materialSent: {
         include: {
           school: {
             select: {
               id: true,
-              name: true, // ✅ sadece adını alıyoruz
+              name: true,
             },
           },
         },
       },
+      moneyDonations: true,
     },
   });
 
@@ -48,15 +43,23 @@ export async function GET(
     return NextResponse.json({ error: "Kullanıcı bulunamadı." }, { status: 404 });
   }
 
+  // 💰 Toplam para bağışı hesaplama
+  const totalMoneyDonated = user.moneyDonations.reduce((sum, donation) => sum + donation.amount, 0);
+
   return NextResponse.json({
     id: user.id,
     name: user.name,
     lastName: user.lastName,
+    email: user.email,
     role: user.role,
-    totalMoneyDonated: user.totalMoneyDonated,
-    totalSaplingsDonated: user.totalSaplingsDonated,
-    materialDonations: user.materialDonationsSent.map((donation) => ({
+    photo: user.photo,
+    totalMoneyDonated,
+    materialDonations: user.materialSent.map((donation) => ({
+      schoolId: donation.school?.id,
       schoolName: donation.school?.name ?? "Bilinmeyen Okul",
+      item: donation.item,
+      amount: donation.amount,
+      createdAt: donation.createdAt,
     })),
   });
 }
