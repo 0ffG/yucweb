@@ -37,28 +37,20 @@ export default function EditSchoolProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
-  // Kullanıcı bilgilerini çek
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch("/api/me", {
-          credentials: "include", // ✅ Token gönderilsin
-        });
+        const res = await fetch("/api/me", { credentials: "include" });
         if (!res.ok) throw new Error();
         const userData = await res.json();
         setUser(userData);
       } catch {
-        toast({
-          title: "Hata",
-          description: "Kullanıcı bilgisi alınamadı.",
-          variant: "destructive",
-        });
+        toast({ title: "Hata", description: "Kullanıcı bilgisi alınamadı.", variant: "destructive" });
       }
     };
     fetchUser();
   }, []);
 
-  // Okul verisini çek
   useEffect(() => {
     const fetchSchool = async () => {
       try {
@@ -68,17 +60,12 @@ export default function EditSchoolProfilePage() {
         setSchool(data);
         setNeeds(data.needs);
       } catch {
-        toast({
-          title: "Hata",
-          description: "Okul verisi alınamadı.",
-          variant: "destructive",
-        });
+        toast({ title: "Hata", description: "Okul verisi alınamadı.", variant: "destructive" });
       }
     };
     fetchSchool();
   }, [id]);
 
-  // Yetki kontrolü yap
   useEffect(() => {
     if (user && school) {
       const isOwner = user.role === "school" && user.id === school.id;
@@ -93,7 +80,6 @@ export default function EditSchoolProfilePage() {
   };
 
   const handleAddNeed = async () => {
-    console.log("Add Need çalıştı");
     if (!needName || !needQuantity || !isAuthorized) return;
 
     try {
@@ -101,7 +87,7 @@ export default function EditSchoolProfilePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ item: needName, count: Number(needQuantity) }),
+        body: JSON.stringify({ item: needName, amount: Number(needQuantity) }),
       });
       if (!res.ok) throw new Error();
       const newNeed = await res.json();
@@ -109,16 +95,11 @@ export default function EditSchoolProfilePage() {
       toast({ title: "Eklendi", description: `${needName} başarıyla eklendi.` });
       clearForm();
     } catch {
-      toast({
-        title: "Hata",
-        description: "İhtiyaç eklenemedi.",
-        variant: "destructive",
-      });
+      toast({ title: "Hata", description: "İhtiyaç eklenemedi.", variant: "destructive" });
     }
   };
 
   const handleUpdateNeed = async () => {
-    console.log("Update Need çalıştı");
     if (selectedNeedIndex === null || !isAuthorized) return;
     const need = needs[selectedNeedIndex];
     if (!need?.id) return;
@@ -128,55 +109,40 @@ export default function EditSchoolProfilePage() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ item: needName, count: Number(needQuantity) }),
+        body: JSON.stringify({ item: needName, amount: Number(needQuantity) }),
       });
       if (!res.ok) throw new Error();
       const updated = await res.json();
       const newList = [...needs];
       newList[selectedNeedIndex] = updated;
       setNeeds(newList);
-      toast({ title: "Güncellendi", description: `${updated.name} başarıyla güncellendi.` });
+      toast({ title: "Güncellendi", description: `${updated.item} başarıyla güncellendi.` });
       clearForm();
     } catch {
-      toast({
-        title: "Hata",
-        description: "Güncelleme başarısız.",
-        variant: "destructive",
-      });
+      toast({ title: "Hata", description: "Güncelleme başarısız.", variant: "destructive" });
     }
   };
 
   const handleDeleteNeed = async () => {
-    console.log("Delete Need çalıştı");
     if (selectedNeedIndex === null || !isAuthorized) return;
     const need = needs[selectedNeedIndex];
     if (!need?.id) return;
-  
+
     try {
       const res = await fetch(`/api/schools/${id}/inventory/${need.id}`, {
         method: "DELETE",
         credentials: "include",
       });
-  
-      if (!res.ok) {
-        const errorMsg = await res.text();
-        console.error("❌ Delete failed:", errorMsg);
-        throw new Error("Delete failed");
-      }
-  
+
+      if (!res.ok) throw new Error("Delete failed");
+
       setNeeds(prev => prev.filter((_, idx) => idx !== selectedNeedIndex));
       toast({ title: "Silindi", description: `${need.name} kaldırıldı.` });
       clearForm();
-  
-    } catch (err) {
-      toast({
-        title: "Hata",
-        description: "Silme işlemi başarısız.",
-        variant: "destructive",
-      });
+    } catch {
+      toast({ title: "Hata", description: "Silme işlemi başarısız.", variant: "destructive" });
     }
   };
-  
 
   const handleSelectNeed = (index: number) => {
     setSelectedNeedIndex(index);
@@ -228,7 +194,6 @@ export default function EditSchoolProfilePage() {
               <button
                 onClick={handleAddNeed}
                 className="px-4 py-2 bg-green-600 text-white rounded"
-                disabled={false}
               >
                 Ekle
               </button>

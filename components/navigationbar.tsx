@@ -5,9 +5,16 @@ import { useState, useEffect } from 'react';
 import { YucLogo } from './yuc-logo';
 import { useRouter } from 'next/navigation';
 
+interface LocalUser {
+  id: number;
+  name: string;
+  role: string;
+  photo?: string;
+}
+
 export default function NavigationBar() {
   const router = useRouter();
-  const [user, setUser] = useState<{ name: string; role: string; photo?: string } | null>(null);
+  const [user, setUser] = useState<LocalUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,6 +58,24 @@ export default function NavigationBar() {
     }
   };
 
+  const goToProfile = () => {
+    if (!user) return;
+
+    switch (user.role) {
+      case "donor":
+        router.push("/donor");
+        break;
+      case "admin":
+        router.push("/admin");
+        break;
+      case "school":
+        router.push(`/schools/${user.id}`);
+        break;
+      default:
+        alert("Geçersiz rol");
+    }
+  };
+
   return (
     <header className="sticky top-0 z-10 backdrop-blur-md bg-slate-900 w-full border-b border-slate-700">
       <div className="w-full px-6 py-4 flex items-center justify-between">
@@ -87,15 +112,7 @@ export default function NavigationBar() {
             <>
               <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/10 text-white text-sm">
                 <span>Hoşgeldiniz, <span className="font-semibold">{user.name}</span></span>
-                <button
-                  onClick={() => {
-                    if (user.role === "donor") router.push("/donor");
-                    else if (user.role === "admin") router.push("/admin");
-                    else if (user.role === "school") router.push("/school");
-                    else alert("Geçersiz rol");
-                  }}
-                  className="ml-2"
-                >
+                <button onClick={goToProfile} className="ml-2">
                   <img
                     src={user.photo || '/pfpdefault.jpg'}
                     alt="Profil"

@@ -22,9 +22,9 @@ export async function PUT(
   }
 
   const body = await req.json();
-  const { item, count } = body;
+  const { item, amount } = body;
 
-  if (!item || typeof count !== "number" || count <= 0) {
+  if (!item || typeof amount !== "number" || amount <= 0) {
     return NextResponse.json({ error: "Geçersiz veri" }, { status: 400 });
   }
 
@@ -39,7 +39,7 @@ export async function PUT(
 
     const updated = await prisma.inventory.update({
       where: { id: invId },
-      data: { item, count },
+      data: { item, amount },
     });
 
     return NextResponse.json(updated);

@@ -1,18 +1,18 @@
 import bcrypt from 'bcrypt';
 import { NextResponse } from 'next/server';
-import  prisma  from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 import { Role } from '@prisma/client';
 
 interface RegisterBody {
   name: string;
-  surname: string; // Gönderilen veri bu ama modelde 'lastName' olabilir
+  surname?: string;
   email: string;
   password: string;
-  role: string; // Türkçe ya da enum dışı olabilir
+  role: string;
   photoUrl?: string;
+  location?: string;
 }
 
-// Türkçe roller geliyorsa eşlemek için
 const roleMap: Record<string, Role> = {
   "Bağışçı": "donor",
   "Okul": "school",
@@ -20,12 +20,16 @@ const roleMap: Record<string, Role> = {
 };
 
 export async function POST(request: Request) {
-  const { name, surname, email, password, role, photoUrl }: RegisterBody = await request.json();
-
-  // Eksik alan kontrolü
-  if (!name || !surname || !email || !password || !role) {
-    return NextResponse.json({ error: 'Tüm alanlar zorunludur.' }, { status: 400 });
-  }
+  const body: RegisterBody = await request.json();
+  const {
+    name,
+    surname,
+    email,
+    password,
+    role,
+    photoUrl,
+    location
+  } = body;
 
   // Rol eşlemesi
   const mappedRole = roleMap[role] ?? (role as Role);
@@ -33,17 +37,31 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Geçersiz kullanıcı rolü.' }, { status: 400 });
   }
 
+  // Ortak zorunlu alanlar
+  if (!name || !email || !password || !role) {
+    return NextResponse.json({ error: 'Tüm alanlar zorunludur.' }, { status: 400 });
+  }
+
+  // Rol bazlı zorunlu alanlar
+  if (mappedRole === "donor" && !surname) {
+    return NextResponse.json({ error: 'Soyad zorunludur.' }, { status: 400 });
+  }
+  if (mappedRole === "school" && !location) {
+    return NextResponse.json({ error: 'Okul adresi (location) zorunludur.' }, { status: 400 });
+  }
+
   try {
-    const hashedPassword = await bcrypt.hash(password, 10); // 10 salt round
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
       data: {
         name,
-        lastName: surname, // Prisma modelinde lastName ise bunu kullan
+        lastName: mappedRole === "donor" ? surname! : '',
+        location: mappedRole === "school" ? location! : null,
         email,
         password: hashedPassword,
         role: mappedRole,
-        photo: photoUrl || null
+        photo: photoUrl?.trim() || null
       }
     });
 
