@@ -15,9 +15,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Giriş yapılmamış." }, { status: 403 });
   }
 
-  let user: { userId: number; role: string };
+  let user: { userId: number; role: string } | null;
   try {
     user = verifyToken(token);
+    if (!user) {
+      return NextResponse.json({ error: "Token doğrulanamadı." }, { status: 403 });
+    }
   } catch {
     return NextResponse.json({ error: "Token doğrulanamadı." }, { status: 403 });
   }
