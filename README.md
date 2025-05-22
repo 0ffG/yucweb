@@ -1,18 +1,22 @@
 //README.md
 
--database bilgi aktar 
-node prisma/seed.js
+# (Opsiyonel) Veritabanını sıfırla
+dropdb -U goktugtutar yucweb
+createdb -U goktugtutar yucweb
 
+# .env dosyasını kontrol et → DATABASE_URL
 
--database tablo pushlama prisma ile
+# Prisma şemayı veritabanına yolla
 npx prisma db push
 
--database bakma arayüz
+# Dummy verileri ekle
+node prisma/seed.js
+
+# GUI arayüzle veritabanına göz at
 npx prisma studio
 
--database e terminalden bağlan
+# (Opsiyonel) Terminalden psql ile bağlan
 psql -U goktugtutar -h localhost -p 5432 yucweb
-
 
 
 ----eksikler----
