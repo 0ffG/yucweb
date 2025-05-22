@@ -1,5 +1,4 @@
 "use client";
-import NavigationBar from "@/components/navigationbar";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -11,7 +10,8 @@ export default function RegisterPage() {
     password: "",
     confirmPassword: "",
     role: "",
-    photoUrl: ""
+    photoUrl: "",
+    location: ""
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -32,11 +32,12 @@ export default function RegisterPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.name,
-          surname: formData.surname,
+          surname: formData.role === "donor" ? formData.surname : undefined,
           email: formData.email,
           password: formData.password,
           role: formData.role,
-          photoUrl: formData.photoUrl || undefined
+          photoUrl: formData.photoUrl || undefined,
+          location: formData.role === "school" ? formData.location : undefined
         })
       });
 
@@ -52,7 +53,8 @@ export default function RegisterPage() {
     }
   };
 
-  const isSchool = formData.role === "Okul";
+  const isSchool = formData.role === "school";
+  const isDonor = formData.role === "donor";
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
@@ -62,7 +64,6 @@ export default function RegisterPage() {
 
           <form className="space-y-8" onSubmit={handleSubmit}>
             <div className="flex flex-col items-center space-y-10">
-
               <input
                 type="text"
                 name="name"
@@ -72,12 +73,23 @@ export default function RegisterPage() {
                 className="w-3/4 rounded-xl border border-black p-2"
               />
 
-              {!isSchool && (
+              {isDonor && (
                 <input
                   type="text"
                   name="surname"
                   placeholder="Soyad"
                   value={formData.surname}
+                  onChange={handleChange}
+                  className="w-3/4 rounded-xl border border-black p-2"
+                />
+              )}
+
+              {isSchool && (
+                <input
+                  type="text"
+                  name="location"
+                  placeholder="Adres"
+                  value={formData.location}
                   onChange={handleChange}
                   className="w-3/4 rounded-xl border border-black p-2"
                 />
@@ -116,9 +128,9 @@ export default function RegisterPage() {
                 required
               >
                 <option value="" disabled>Kullanıcı Türü</option>
-                <option>Bağışçı</option>
-                <option>Okul</option>
-                <option>Admin</option>
+                <option value="donor">Bağışçı</option>
+                <option value="school">Okul</option>
+                <option value="admin">Admin</option>
               </select>
 
               <input

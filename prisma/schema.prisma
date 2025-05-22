@@ -16,12 +16,16 @@ enum Role {
 model User {
   id        Int     @id @default(autoincrement())
   name      String
+  lastName  String?
+  location String?
+  photo     String?
   email     String  @unique
   password  String
   role      Role
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  totalMoneyDonated Int @default(0) 
   materialSent       MaterialDonation[]   @relation("DonorMaterialDonations")
   materialReceived   MaterialDonation[]   @relation("SchoolMaterialDonations")
   inventories        Inventory[]

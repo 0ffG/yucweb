@@ -5,11 +5,12 @@ import  prisma  from "@/lib/prisma";
 export default async function MainPage() {
   const news = await prisma.news.findMany();
 
-  const total = await prisma.donation.aggregate({// 📁 app/api/donations/total/route.ts -- toplam para hesaplanir
+  const total = await prisma.moneyDonation.aggregate({
     _sum: {
       amount: true,
     },
   });
+  
 
   const totalAmount = total._sum.amount || 0;
   return (
