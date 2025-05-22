@@ -5,7 +5,7 @@ export async function GET(
   req: NextRequest,
   context: { params: { id: string } }
 ) {
-  const { id } = context.params;
+  const { id } = await context.params;
   const schoolId = parseInt(id);
 
   if (isNaN(schoolId)) {
