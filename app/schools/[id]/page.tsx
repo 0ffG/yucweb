@@ -25,19 +25,23 @@ export default function SchoolProfilePage() {
   const router = useRouter();
   const [school, setSchool] = useState<SchoolProfile | null>(null);
   const [displayedNeeds, setDisplayedNeeds] = useState<Need[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (error === 'not-authorized') {
       toast({
+        type: 'error',
         title: 'Yetkisiz İşlem',
         description: 'Farklı bir profili düzenleyemezsiniz.',
-        variant: "destructive",
+        open: true,
+        onOpenChange: () => {},
       });
     }
   }, [error]);
 
   useEffect(() => {
     const fetchSchool = async () => {
+      setIsLoading(true);
       try {
         const res = await fetch(`/api/schools/${id}`);
         if (!res.ok) throw new Error("Okul verisi alınamadı");
@@ -48,11 +52,22 @@ export default function SchoolProfilePage() {
         console.error("Hata:", err);
         setSchool(null);
         setDisplayedNeeds([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     if (id) fetchSchool();
   }, [id]);
+
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-white px-4 py-8">
+        <h1 className="text-2xl font-bold">Yükleniyor...</h1>
+        <Toaster />
+      </div>
+    );
+  }
 
   if (!school) {
     return (
