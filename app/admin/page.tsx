@@ -1,4 +1,3 @@
-// 📁 app/admin/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,7 +5,8 @@ import { useState, useEffect } from "react";
 export default function AdminProfile() {
   const [userIdToDelete, setUserIdToDelete] = useState("");
   const [donationTotal, setDonationTotal] = useState("");
-  const [hours, setHours] = useState("24");
+  const [moneyHours, setMoneyHours] = useState("24");
+  const [materialHours, setMaterialHours] = useState("24");
   const [newsTitle, setNewsTitle] = useState("");
   const [newsImage, setNewsImage] = useState("");
   const [newsList, setNewsList] = useState([]);
@@ -17,10 +17,44 @@ export default function AdminProfile() {
   const [moneyDonationId, setMoneyDonationId] = useState("");
 
   useEffect(() => {
-    fetch("/api/admin/money-donations").then(res => res.json()).then(setMoneyDonations);
-    fetch("/api/admin/material-donations").then(res => res.json()).then(setMaterialDonations);
+    const queryParams = moneyHours ? `?hours=${moneyHours}` : "";
+
+    fetch(`/api/admin/money-donations${queryParams}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && !data.message) {
+          setMoneyDonations(data);
+        } else {
+          console.error("Para bağışları çekilemedi:", data.message);
+          setMoneyDonations([]);
+        }
+      })
+      .catch(err => {
+        console.error("Para bağışları fetch hatası:", err);
+        setMoneyDonations([]);
+      });
+  }, [moneyHours]);
+
+  useEffect(() => {
+    const queryParams = materialHours ? `?hours=${materialHours}` : "";
+
+    fetch(`/api/admin/material-donations${queryParams}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && !data.message) {
+          setMaterialDonations(data);
+        } else {
+          console.error("Eşya bağışları çekilemedi:", data.message);
+          setMaterialDonations([]);
+        }
+      })
+      .catch(err => {
+        console.error("Eşya bağışları fetch hatası:", err);
+        setMaterialDonations([]);
+      });
+
     fetchNews();
-  }, []);
+  }, [materialHours]);
 
   const fetchNews = async () => {
     try {
@@ -108,7 +142,7 @@ export default function AdminProfile() {
       <main className="max-w-6xl mx-auto px-6 py-10 space-y-10">
 
         {/* Kullanıcı Silme ve Bağış Güncelleme */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="rounded-2xl bg-white shadow-md p-6 border border-gray-200">
             <h2 className="text-xl font-semibold text-center">Kullanıcı Sil</h2>
             <input type="text" value={userIdToDelete} onChange={(e) => setUserIdToDelete(e.target.value)} placeholder="User ID" className="w-full border p-2 mt-4" />
@@ -120,56 +154,83 @@ export default function AdminProfile() {
             <input type="number" value={donationTotal} onChange={(e) => setDonationTotal(e.target.value)} placeholder="Bağış Sayısı" className="w-full border p-2 mt-4" />
             <button onClick={handleUpdateTotalDonation} className="w-full bg-blue-600 text-white p-2 mt-2 rounded">Güncelle</button>
           </div>
+        </div> */}
+        <div className="rounded-2xl bg-white shadow-md p-6 border border-gray-200">
+            <h2 className="text-xl font-semibold text-center">Kullanıcı Sil</h2>
+            <input type="text" value={userIdToDelete} onChange={(e) => setUserIdToDelete(e.target.value)} placeholder="User ID" className="w-full border p-2 mt-4" />
+            <button onClick={handleDeleteUser} className="w-full bg-red-500 text-white p-2 mt-2 rounded">Sil</button>
         </div>
 
         {/* Para Bağışları Tablosu */}
-        <div className="bg-white shadow-md p-6 rounded-2xl border border-gray-200">
+        <div className="bg-white shadow-md p-6 rounded-2xl border border-gray-200 relative">
           <h2 className="text-xl font-semibold mb-4">Para Bağışları</h2>
-          <table className="w-full table-auto text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-2">Kullanıcı</th>
-                <th className="p-2">Miktar</th>
-                <th className="p-2">Tarih</th>
-              </tr>
-            </thead>
-            <tbody>
-              {moneyDonations.map((d: any, i) => (
-                <tr key={i} className="hover:bg-gray-50">
-                  <td className="p-2">{d.donor?.name}</td>
-                  <td className="p-2">₺{d.amount}</td>
-                  <td className="p-2">{new Date(d.createdAt).toLocaleDateString()}</td>
+          <div className="absolute right-6 top-6">
+            <select value={moneyHours} onChange={(e) => setMoneyHours(e.target.value)} className="border p-2 rounded">
+              <option value="">Tüm Zamanlar</option>
+              <option value="1">Son 1 Saat</option>
+              <option value="24">Son 24 Saat</option>
+              <option value="168">Son 7 Gün</option>
+              <option value="720">Son 30 Gün</option>
+            </select>
+          </div>
+          <div className="max-h-[400px] overflow-y-auto mt-4">
+            <table className="w-full table-auto text-sm">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-2">Kullanıcı</th>
+                  <th className="p-2">Miktar</th>
+                  <th className="p-2">Tarih</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {moneyDonations.map((d: any, i) => (
+                  <tr key={i} className="hover:bg-gray-50">
+                    <td className="p-2">{d.donor?.name}</td>
+                    <td className="p-2">₺{d.amount}</td>
+                    <td className="p-2">{new Date(d.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Eşya Bağışları Tablosu */}
-        <div className="bg-white shadow-md p-6 rounded-2xl border border-gray-200">
+        <div className="bg-white shadow-md p-6 rounded-2xl border border-gray-200 relative">
           <h2 className="text-xl font-semibold mb-4">Eşya Bağışları</h2>
-          <table className="w-full table-auto text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-2">Kullanıcı</th>
-                <th className="p-2">Eşya</th>
-                <th className="p-2">Adet</th>
-                <th className="p-2">Okul</th>
-                <th className="p-2">Tarih</th>
-              </tr>
-            </thead>
-            <tbody>
-              {materialDonations.map((d: any, i) => (
-                <tr key={i} className="hover:bg-gray-50">
-                  <td className="p-2">{d.donor?.name}</td>
-                  <td className="p-2">{d.item}</td>
-                  <td className="p-2">{d.amount}</td>
-                  <td className="p-2">{d.school?.name}</td>
-                  <td className="p-2">{new Date(d.createdAt).toLocaleDateString()}</td>
+          <div className="absolute right-6 top-6">
+            <select value={materialHours} onChange={(e) => setMaterialHours(e.target.value)} className="border p-2 rounded">
+              <option value="">Tüm Zamanlar</option>
+              <option value="1">Son 1 Saat</option>
+              <option value="24">Son 24 Saat</option>
+              <option value="168">Son 7 Gün</option>
+              <option value="720">Son 30 Gün</option>
+            </select>
+          </div>
+          <div className="max-h-[400px] overflow-y-auto mt-4">
+            <table className="w-full table-auto text-sm">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-2">Kullanıcı</th>
+                  <th className="p-2">Eşya</th>
+                  <th className="p-2">Adet</th>
+                  <th className="p-2">Okul</th>
+                  <th className="p-2">Tarih</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {materialDonations.map((d: any, i) => (
+                  <tr key={i} className="hover:bg-gray-50">
+                    <td className="p-2">{d.donor?.name}</td>
+                    <td className="p-2">{d.item}</td>
+                    <td className="p-2">{d.amount}</td>
+                    <td className="p-2">{d.school?.name}</td>
+                    <td className="p-2">{new Date(d.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Para Gönderme Formu */}
@@ -200,6 +261,7 @@ export default function AdminProfile() {
             ))}
           </ul>
         </div>
+
       </main>
     </div>
   );

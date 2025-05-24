@@ -35,8 +35,13 @@ psql -U goktugtutar -h localhost -p 5432 yucweb
 
 7- fidan sayısı kullancının toplam bağışı bölü 1000 olucak ayrı bir yerde bunu tutmak istersek user tablosuna bir sutun ekleyebiliriz
 
+8- admin bagislari silebilicek
+
 ----değiştirilciekler----
 
 1-!!! olan fonkisyonlar tablo değiştiği için yeni tablolar ile update edilicek queryler
 
-2- okul gitmek isterken okul bulunamadı hatası veriyor daha sonra okula gidiyor (okul kısmına komple bi el atılması gerek)
+
+---test---
+
+1- admin sayfasinda user sil
