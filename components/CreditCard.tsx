@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import '@/styles/CreditCard.css'; // CSS'i ayrıca aşağıda vereceğim
 
