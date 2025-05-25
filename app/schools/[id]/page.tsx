@@ -15,26 +15,30 @@ interface SchoolProfile {
   name: string;
   email: string;
   contact?: string;
+  location?: string;
   needs: Need[];
 }
 
 export default function SchoolProfilePage() {
   const { id } = useParams();
   const searchParams = useSearchParams();
-  const error = searchParams.get('error');
+  const error = searchParams.get("error");
   const router = useRouter();
+
   const [school, setSchool] = useState<SchoolProfile | null>(null);
   const [displayedNeeds, setDisplayedNeeds] = useState<Need[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (error === 'not-authorized') {
+    if (error === "not-authorized") {
       toast({
+
         type: 'error',
         title: 'Yetkisiz İşlem',
         description: 'Farklı bir profili düzenleyemezsiniz.',
         open: true,
         onOpenChange: () => {},
+ 
       });
     }
   }, [error]);
@@ -94,8 +98,15 @@ export default function SchoolProfilePage() {
         <main className="container mx-auto px-4 py-8">
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="lg:w-1/3 rounded border border-gray-300 p-6 shadow-md bg-gray-50">
-              <h2 className="mb-4 text-xl font-semibold text-center text-slate-800 border-b pb-2">İLETİŞİM BİLGİLERİ</h2>
-              <p className="text-gray-700">{school.email}</p>
+              <h2 className="mb-4 text-xl font-semibold text-center text-slate-800 border-b pb-2">
+                İLETİŞİM BİLGİLERİ
+              </h2>
+              <p className="text-gray-700">
+                <strong>Email:</strong> {school.email}
+              </p>
+              <p className="text-gray-700">
+                <strong>Konum:</strong> {school.location || "Konum belirtilmedi"}
+              </p>
               <button
                 onClick={() => router.push(`/schools/${school.id}/edit`)}
                 className="mt-6 w-full rounded bg-indigo-600 hover:bg-indigo-700 py-2.5 text-white font-semibold transition-colors duration-200"
@@ -105,7 +116,9 @@ export default function SchoolProfilePage() {
             </div>
 
             <div className="flex-1 rounded border border-gray-300 p-6 shadow-md">
-              <h2 className="mb-4 text-xl font-semibold text-center text-slate-800 border-b pb-2">İHTİYAÇ LİSTESİ</h2>
+              <h2 className="mb-4 text-xl font-semibold text-center text-slate-800 border-b pb-2">
+                İHTİYAÇ LİSTESİ
+              </h2>
               <div className="space-y-3 mb-6 max-h-80 overflow-y-auto pr-2 border rounded p-3 bg-gray-50">
                 {displayedNeeds.length > 0 ? (
                   displayedNeeds.map((need, index) => (
@@ -120,7 +133,9 @@ export default function SchoolProfilePage() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-center text-gray-500 italic py-4">Henüz ihtiyaç eklenmemiş.</p>
+                  <p className="text-center text-gray-500 italic py-4">
+                    Henüz ihtiyaç eklenmemiş.
+                  </p>
                 )}
               </div>
             </div>

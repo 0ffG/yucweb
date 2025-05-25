@@ -21,27 +21,13 @@ psql -U goktugtutar -h localhost -p 5432 yucweb
 
 ----eksikler----
 
-1-donation yapildiginda donationlar veritabanina kayit edilmiyor ama kullanicin hesabinda gozukuyor toplam ne kadar para yardim ettigi artiyor mesela
 
-2-kullanıcıdaki toplam yapılan bağış (para) her seferinde toplanıp o kısımda gözükücek ve yapılan eşya bağışları tek tek yazdırılıcak hangi okula ne ve ne kadar ve ne zamanda yapıldığı
+3-profil duzenle kismi sikinti 
 
-3-profil duzenle kismi sikinti
-
-4- okul kendi profiline giremiyor (navbardan profil fotosunu girince profil fotosunu goremesi gerekiyor) bagiscidaki gibi tokenden alinicak okulun hangi idye sahip oldugu bunun yaninda herkes kendi profilini duzenleyebilicek
 
 5-eşya bağışı yaparken kullanıcı ilk olarak bağışlamak istediği eşyanın adını yazıcak daha sonra o ekranda o anki o kelime ile alaklı eşyalar çıkıcak(mesela s yazdı kullanıcı aşağıda okullar çıkıyor ama bu s nin devamı yok belki sıra belki silgi) ! daha sonra hangi okul odluğunu seçicek
 
 6-adminde bağışları gör tablosu ikiye ayrılıcak biri eşya biri para bağışını birde distribution tablosu eklenicek (paranın hangi okula gönderildiğini vs göstericek bu paralarıda admin göndericek)
 
-7- fidan sayısı kullancının toplam bağışı bölü 1000 olucak ayrı bir yerde bunu tutmak istersek user tablosuna bir sutun ekleyebiliriz
+7- fidan sayısı kullancının toplam bağışı bölü 5 olucak ayrı bir yerde bunu tutmak istersek user tablosuna bir sutun ekleyebiliriz
 
-8- admin bagislari silebilicek
-
-----değiştirilciekler----
-
-1-!!! olan fonkisyonlar tablo değiştiği için yeni tablolar ile update edilicek queryler
-
-
----test---
-
-1- admin sayfasinda user sil
