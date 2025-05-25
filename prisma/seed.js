@@ -1,92 +1,143 @@
-import { PrismaClient } from '@prisma/client';
+const { PrismaClient } = require('@prisma/client');
+const { fakerTR: faker } = require('@faker-js/faker');
+
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("🚀 Seed işlemi başlatıldı...");
+  console.log('🧹 Mevcut veriler siliniyor...');
 
-  // USERS (admin, donor, school)
-  await prisma.user.createMany({
-    data: [
-      { name: "Admin1", email: "admin1@example.com", password: "admin", role: "admin" },
-      { name: "Admin2", email: "admin2@example.com", password: "admin", role: "admin" },
+  // Silme sırası önemli: ilişkili tablolarda bağımlılıklar vardır
+  await prisma.moneyDistribution.deleteMany();
+  await prisma.moneyDonation.deleteMany();
+  await prisma.materialDonation.deleteMany();
+  await prisma.inventory.deleteMany();
+  await prisma.news.deleteMany();
+  await prisma.user.deleteMany();
 
-      { name: "Donor1", email: "donor1@example.com", password: "donor", role: "donor" },
-      { name: "Donor2", email: "donor2@example.com", password: "donor", role: "donor" },
-      { name: "Donor3", email: "donor3@example.com", password: "donor", role: "donor" },
-      { name: "Donor4", email: "donor4@example.com", password: "donor", role: "donor" },
+  console.log('🧪 Yeni veriler ekleniyor...');
 
-      { name: "School1", email: "school1@example.com", password: "school", role: "school" },
-      { name: "School2", email: "school2@example.com", password: "school", role: "school" },
-      { name: "School3", email: "school3@example.com", password: "school", role: "school" },
-      { name: "School4", email: "school4@example.com", password: "school", role: "school" }
-    ]
-  });
+  const donors = [];
+  const schools = [];
 
-  const donors = await prisma.user.findMany({ where: { role: 'donor' } });
-  const schools = await prisma.user.findMany({ where: { role: 'school' } });
+  console.log('➡️ Kullanıcılar ekleniyor...');
 
-  // MONEY DONATIONS
-  for (let i = 0; i < 10; i++) {
-    await prisma.moneyDonation.create({
+  // Adminler
+  for (let i = 0; i < 5; i++) {
+    await prisma.user.create({
       data: {
-        amount: Math.floor(Math.random() * 9000 + 1000),
-        donorId: donors[i % donors.length].id,
+        name: faker.person.firstName(),
+        lastName: faker.person.lastName(),
+        email: `admin${i}@example.com`,
+        password: 'password123',
+        role: 'admin',
+        location: faker.location.city(),
       }
     });
   }
 
-  const moneyDonations = await prisma.moneyDonation.findMany();
+  // Donörler
+  for (let i = 0; i < 5; i++) {
+    const donor = await prisma.user.create({
+      data: {
+        name: faker.person.firstName(),
+        lastName: faker.person.lastName(),
+        email: `donor${i}@example.com`,
+        password: 'password123',
+        role: 'donor',
+        location: faker.location.city(),
+        totalMoneyDonated: faker.number.int({ min: 500, max: 5000 }),
+      }
+    });
+    donors.push(donor);
+  }
 
-  // MONEY DISTRIBUTIONS
-  for (let i = 0; i < 10; i++) {
+  // Okullar
+  for (let i = 0; i < 5; i++) {
+    const school = await prisma.user.create({
+      data: {
+        name: faker.company.name(),
+        email: `school${i}@example.com`,
+        password: 'password123',
+        role: 'school',
+        location: faker.location.city(),
+      }
+    });
+    schools.push(school);
+  }
+
+  console.log('➡️ Para bağışları ve dağıtımları ekleniyor...');
+
+  // Para bağışları ve dağıtımları
+  for (let i = 0; i < 15; i++) {
+    const donor = faker.helpers.arrayElement(donors);
+    const donation = await prisma.moneyDonation.create({
+      data: {
+        amount: faker.number.int({ min: 100, max: 1000 }),
+        donorId: donor.id,
+      }
+    });
+
+    const school = faker.helpers.arrayElement(schools);
+
     await prisma.moneyDistribution.create({
       data: {
-        amount: Math.floor(Math.random() * 5000 + 500),
-        moneyDonationId: moneyDonations[i % moneyDonations.length].id,
-        schoolId: schools[i % schools.length].id,
+        amount: donation.amount,
+        schoolId: school.id,
+        moneyDonationId: donation.id,
       }
     });
   }
 
-  // MATERIAL DONATIONS
-  for (let i = 0; i < 10; i++) {
+  console.log('➡️ Eşya bağışları ekleniyor...');
+
+  // Eşya bağışları
+  for (let i = 0; i < 15; i++) {
+    const donor = faker.helpers.arrayElement(donors);
+    const school = faker.helpers.arrayElement(schools);
+
     await prisma.materialDonation.create({
       data: {
-        item: `Malzeme ${i + 1}`,
-        amount: Math.floor(Math.random() * 50 + 1),
-        donorId: donors[i % donors.length].id,
-        schoolId: schools[i % schools.length].id,
+        item: faker.commerce.product(),
+        amount: faker.number.int({ min: 1, max: 50 }),
+        donorId: donor.id,
+        schoolId: school.id,
       }
     });
   }
 
-  // INVENTORIES
-  for (let i = 0; i < 10; i++) {
+  console.log('➡️ Okul envanterleri ekleniyor...');
+
+  // Envanterler
+  for (let i = 0; i < 15; i++) {
+    const school = faker.helpers.arrayElement(schools);
+
     await prisma.inventory.create({
       data: {
-        item: `Envanter Ürünü ${i + 1}`,
-        amount: Math.floor(Math.random() * 100 + 1),
-        schoolId: schools[i % schools.length].id,
+        item: faker.commerce.product(),
+        amount: faker.number.int({ min: 5, max: 100 }),
+        schoolId: school.id,
       }
     });
   }
 
-  // NEWS
-  for (let i = 0; i < 10; i++) {
+  console.log('➡️ Haberler ekleniyor...');
+
+  // Haberler
+  for (let i = 0; i < 15; i++) {
     await prisma.news.create({
       data: {
-        title: `Haber Başlığı ${i + 1}`,
-        image: `https://picsum.photos/seed/news${i}/300/200`,
+        title: faker.lorem.sentence(),
+        image: Math.random() < 0.4 ? null : faker.image.url()
       }
     });
   }
 
-  console.log("✅ Seed işlemi başarıyla tamamlandı.");
+  console.log('✅ Tüm seed verileri başarıyla eklendi!');
 }
 
 main()
   .catch((e) => {
-    console.error("❌ Seed sırasında hata:", e);
+    console.error('❌ Hata:', e);
     process.exit(1);
   })
   .finally(async () => {

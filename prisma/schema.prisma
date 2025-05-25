@@ -16,7 +16,7 @@ enum Role {
 model User {
   id        Int     @id @default(autoincrement())
   name      String
-  lastName  String
+  lastName  String?
   location String?
   photo     String?
   email     String  @unique

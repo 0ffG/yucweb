@@ -30,3 +30,4 @@ psql -U goktugtutar -h localhost -p 5432 yucweb
 6-adminde bağışları gör tablosu ikiye ayrılıcak biri eşya biri para bağışını birde distribution tablosu eklenicek (paranın hangi okula gönderildiğini vs göstericek bu paralarıda admin göndericek)
 
 7- fidan sayısı kullancının toplam bağışı bölü 5 olucak ayrı bir yerde bunu tutmak istersek user tablosuna bir sutun ekleyebiliriz
+

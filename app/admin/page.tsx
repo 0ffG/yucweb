@@ -1,4 +1,3 @@
-// 📁 app/admin/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,27 +5,56 @@ import { useState, useEffect } from "react";
 export default function AdminProfile() {
   const [userIdToDelete, setUserIdToDelete] = useState("");
   const [donationTotal, setDonationTotal] = useState("");
-  type Donation = {
-    donor?: { name?: string };
-    donationType: string;
-    amount: number;
-    createdAt: string;
-  };
-  const [donations, setDonations] = useState<Donation[]>([]);
-  const [hours, setHours] = useState("24");
+  const [moneyHours, setMoneyHours] = useState("24");
+  const [materialHours, setMaterialHours] = useState("24");
   const [newsTitle, setNewsTitle] = useState("");
   const [newsImage, setNewsImage] = useState("");
   const [newsList, setNewsList] = useState([]);
+  const [moneyDonations, setMoneyDonations] = useState([]);
+  const [materialDonations, setMaterialDonations] = useState([]);
+  const [amount, setAmount] = useState("");
+  const [schoolId, setSchoolId] = useState("");
+  const [moneyDonationId, setMoneyDonationId] = useState("");
 
-  const fetchDonations = async () => {
-    try {
-      const res = await fetch(`/api/donations?hours=${hours}`);
-      const data = await res.json();
-      setDonations(data);
-    } catch (error) {
-      console.error("Bağışlar çekilemedi", error);
-    }
-  };
+  useEffect(() => {
+    const queryParams = moneyHours ? `?hours=${moneyHours}` : "";
+
+    fetch(`/api/admin/money-donations${queryParams}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && !data.message) {
+          setMoneyDonations(data);
+        } else {
+          console.error("Para bağışları çekilemedi:", data.message);
+          setMoneyDonations([]);
+        }
+      })
+      .catch(err => {
+        console.error("Para bağışları fetch hatası:", err);
+        setMoneyDonations([]);
+      });
+  }, [moneyHours]);
+
+  useEffect(() => {
+    const queryParams = materialHours ? `?hours=${materialHours}` : "";
+
+    fetch(`/api/admin/material-donations${queryParams}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data && !data.message) {
+          setMaterialDonations(data);
+        } else {
+          console.error("Eşya bağışları çekilemedi:", data.message);
+          setMaterialDonations([]);
+        }
+      })
+      .catch(err => {
+        console.error("Eşya bağışları fetch hatası:", err);
+        setMaterialDonations([]);
+      });
+
+    fetchNews();
+  }, [materialHours]);
 
   const fetchNews = async () => {
     try {
@@ -38,17 +66,10 @@ export default function AdminProfile() {
     }
   };
 
-  useEffect(() => {
-    fetchDonations();
-    fetchNews();
-  }, [hours]);
-
   const handleDeleteUser = async () => {
     if (!userIdToDelete) return;
     try {
-      await fetch(`/api/users/${userIdToDelete}`, {
-        method: "DELETE",
-      });
+      await fetch(`/api/users/${userIdToDelete}`, { method: "DELETE" });
       alert("Kullanıcı silindi");
     } catch (error) {
       console.error("Kullanıcı silinemedi", error);
@@ -88,87 +109,85 @@ export default function AdminProfile() {
 
   const handleDeleteNews = async (id: number) => {
     try {
-      await fetch(`/api/news/${id}`, {
-        method: "DELETE",
-      });
+      await fetch(`/api/news/${id}`, { method: "DELETE" });
       fetchNews();
     } catch (err) {
       console.error("Haber silinemedi", err);
     }
   };
 
+  const handleDistributeMoney = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await fetch("/api/admin/distribute", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: Number(amount),
+          schoolId: Number(schoolId),
+          moneyDonationId: moneyDonationId ? Number(moneyDonationId) : null,
+        }),
+      });
+      alert("Para dağıtımı yapıldı!");
+      setAmount("");
+      setSchoolId("");
+      setMoneyDonationId("");
+    } catch (err) {
+      console.error("Para dağıtılamadı", err);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <main className="max-w-6xl mx-auto px-6 py-10 space-y-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Kullanıcı Silme */}
+
+        {/* Kullanıcı Silme ve Bağış Güncelleme */}
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="rounded-2xl bg-white shadow-md p-6 border border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-800 text-center">Kullanıcı Sil</h2>
-            <div className="mt-6">
-              <input
-                type="text"
-                value={userIdToDelete}
-                onChange={(e) => setUserIdToDelete(e.target.value)}
-                placeholder="User ID"
-                className="w-full rounded-lg border border-gray-300 p-2"
-              />
-              <button onClick={handleDeleteUser} className="mt-4 w-full rounded-lg bg-red-500 px-4 py-2 text-white font-semibold">
-                Sil
-              </button>
-            </div>
+            <h2 className="text-xl font-semibold text-center">Kullanıcı Sil</h2>
+            <input type="text" value={userIdToDelete} onChange={(e) => setUserIdToDelete(e.target.value)} placeholder="User ID" className="w-full border p-2 mt-4" />
+            <button onClick={handleDeleteUser} className="w-full bg-red-500 text-white p-2 mt-2 rounded">Sil</button>
           </div>
 
-          {/* Bağış Sayısı Güncelleme */}
           <div className="rounded-2xl bg-white shadow-md p-6 border border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-800 text-center">Toplam Bağışı Güncelle</h2>
-            <div className="mt-6">
-              <input
-                type="number"
-                value={donationTotal}
-                onChange={(e) => setDonationTotal(e.target.value)}
-                placeholder="Bağış Sayısı"
-                className="w-full rounded-lg border border-gray-300 p-2"
-              />
-              <button onClick={handleUpdateTotalDonation} className="mt-4 w-full rounded-lg bg-blue-600 px-4 py-2 text-white font-semibold">
-                Güncelle
-              </button>
-            </div>
+            <h2 className="text-xl font-semibold text-center">Toplam Bağışı Güncelle</h2>
+            <input type="number" value={donationTotal} onChange={(e) => setDonationTotal(e.target.value)} placeholder="Bağış Sayısı" className="w-full border p-2 mt-4" />
+            <button onClick={handleUpdateTotalDonation} className="w-full bg-blue-600 text-white p-2 mt-2 rounded">Güncelle</button>
           </div>
+        </div> */}
+        <div className="rounded-2xl bg-white shadow-md p-6 border border-gray-200">
+            <h2 className="text-xl font-semibold text-center">Kullanıcı Sil</h2>
+            <input type="text" value={userIdToDelete} onChange={(e) => setUserIdToDelete(e.target.value)} placeholder="User ID" className="w-full border p-2 mt-4" />
+            <button onClick={handleDeleteUser} className="w-full bg-red-500 text-white p-2 mt-2 rounded">Sil</button>
         </div>
 
-        {/* Bağış Geçmişi */}
-        <div className="rounded-2xl bg-white shadow-md p-6 border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4 flex justify-between items-center">
-            Bağış Geçmişi
-            <select
-              value={hours}
-              onChange={(e) => setHours(e.target.value)}
-              className="ml-4 border rounded px-2 py-1 text-sm"
-            >
-              <option value="24">Son 24 saat</option>
-              <option value="48">Son 48 saat</option>
-              <option value="168">Son 7 gün</option>
-              <option value="720">Son 30 gün</option>
-              <option value="8760">Tümü</option>
+        {/* Para Bağışları Tablosu */}
+        <div className="bg-white shadow-md p-6 rounded-2xl border border-gray-200 relative">
+          <h2 className="text-xl font-semibold mb-4">Para Bağışları</h2>
+          <div className="absolute right-6 top-6">
+            <select value={moneyHours} onChange={(e) => setMoneyHours(e.target.value)} className="border p-2 rounded">
+              <option value="">Tüm Zamanlar</option>
+              <option value="1">Son 1 Saat</option>
+              <option value="24">Son 24 Saat</option>
+              <option value="168">Son 7 Gün</option>
+              <option value="720">Son 30 Gün</option>
             </select>
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full table-auto text-sm text-left text-gray-600">
-              <thead className="bg-gray-100 text-gray-700 font-medium">
+          </div>
+          <div className="max-h-[400px] overflow-y-auto mt-4">
+            <table className="w-full table-auto text-sm">
+              <thead className="bg-gray-100">
                 <tr>
-                  <th className="p-3">Kullanıcı Adı</th>
-                  <th className="p-3">Bağış Türü</th>
-                  <th className="p-3">Miktar</th>
-                  <th className="p-3">Tarih</th>
+                  <th className="p-2">Kullanıcı</th>
+                  <th className="p-2">Miktar</th>
+                  <th className="p-2">Tarih</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
-                {donations.map((d, i) => (
+              <tbody>
+                {moneyDonations.map((d: any, i) => (
                   <tr key={i} className="hover:bg-gray-50">
-                    <td className="p-3 font-medium">{d.donor?.name}</td>
-                    <td className="p-3">{d.donationType}</td>
-                    <td className="p-3">₺{d.amount}</td>
-                    <td className="p-3">{new Date(d.createdAt).toLocaleDateString()}</td>
+                    <td className="p-2">{d.donor?.name}</td>
+                    <td className="p-2">₺{d.amount}</td>
+                    <td className="p-2">{new Date(d.createdAt).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -176,27 +195,62 @@ export default function AdminProfile() {
           </div>
         </div>
 
-        {/* Haber Ekleme ve Listeleme */}
-        <div className="rounded-2xl bg-white shadow-md p-6 border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Haber Yönetimi</h2>
+        {/* Eşya Bağışları Tablosu */}
+        <div className="bg-white shadow-md p-6 rounded-2xl border border-gray-200 relative">
+          <h2 className="text-xl font-semibold mb-4">Eşya Bağışları</h2>
+          <div className="absolute right-6 top-6">
+            <select value={materialHours} onChange={(e) => setMaterialHours(e.target.value)} className="border p-2 rounded">
+              <option value="">Tüm Zamanlar</option>
+              <option value="1">Son 1 Saat</option>
+              <option value="24">Son 24 Saat</option>
+              <option value="168">Son 7 Gün</option>
+              <option value="720">Son 30 Gün</option>
+            </select>
+          </div>
+          <div className="max-h-[400px] overflow-y-auto mt-4">
+            <table className="w-full table-auto text-sm">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-2">Kullanıcı</th>
+                  <th className="p-2">Eşya</th>
+                  <th className="p-2">Adet</th>
+                  <th className="p-2">Okul</th>
+                  <th className="p-2">Tarih</th>
+                </tr>
+              </thead>
+              <tbody>
+                {materialDonations.map((d: any, i) => (
+                  <tr key={i} className="hover:bg-gray-50">
+                    <td className="p-2">{d.donor?.name}</td>
+                    <td className="p-2">{d.item}</td>
+                    <td className="p-2">{d.amount}</td>
+                    <td className="p-2">{d.school?.name}</td>
+                    <td className="p-2">{new Date(d.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Para Gönderme Formu */}
+        <div className="bg-white shadow-md p-6 rounded-2xl border border-gray-200">
+          <h2 className="text-xl font-semibold mb-4">Para Dağıtımı</h2>
+          <form onSubmit={handleDistributeMoney}>
+            <input type="number" placeholder="Miktar" value={amount} onChange={(e) => setAmount(e.target.value)} className="border p-2 w-full mb-2" />
+            <input type="number" placeholder="Okul ID" value={schoolId} onChange={(e) => setSchoolId(e.target.value)} className="border p-2 w-full mb-2" />
+            <input type="number" placeholder="Bağış ID (isteğe bağlı)" value={moneyDonationId} onChange={(e) => setMoneyDonationId(e.target.value)} className="border p-2 w-full mb-2" />
+            <button className="bg-green-600 text-white p-2 w-full rounded">Gönder</button>
+          </form>
+        </div>
+
+        {/* Haber Yönetimi */}
+        <div className="bg-white shadow-md p-6 rounded-2xl border border-gray-200">
+          <h2 className="text-xl font-semibold mb-4">Haber Yönetimi</h2>
           <div className="flex flex-col md:flex-row gap-4 mb-6">
-            <input
-              type="text"
-              value={newsTitle}
-              onChange={(e) => setNewsTitle(e.target.value)}
-              placeholder="Haber Başlığı"
-              className="flex-1 border border-gray-300 rounded p-2"
-            />
-            <input
-              type="text"
-              value={newsImage}
-              onChange={(e) => setNewsImage(e.target.value)}
-              placeholder="Haber Görsel URL"
-              className="flex-1 border border-gray-300 rounded p-2"
-            />
-            <button onClick={handleAddNews} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-              Ekle
-            </button>
+            <input type="text" value={newsTitle} onChange={(e) => setNewsTitle(e.target.value)} placeholder="Haber Başlığı" className="flex-1 border rounded p-2" />
+            <input type="text" value={newsImage} onChange={(e) => setNewsImage(e.target.value)} placeholder="Haber Görsel URL" className="flex-1 border rounded p-2" />
+            <button onClick={handleAddNews} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Ekle</button>
           </div>
           <ul className="space-y-3">
             {newsList.map((news: any) => (
@@ -207,6 +261,7 @@ export default function AdminProfile() {
             ))}
           </ul>
         </div>
+
       </main>
     </div>
   );

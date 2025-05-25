@@ -32,9 +32,13 @@ export default function SchoolProfilePage() {
   useEffect(() => {
     if (error === "not-authorized") {
       toast({
-        title: "Yetkisiz İşlem",
-        description: "Farklı bir profili düzenleyemezsiniz.",
-        variant: "destructive",
+
+        type: 'error',
+        title: 'Yetkisiz İşlem',
+        description: 'Farklı bir profili düzenleyemezsiniz.',
+        open: true,
+        onOpenChange: () => {},
+ 
       });
     }
   }, [error]);
