@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { YucLogo } from '@/components/yuc-logo';
+import { useSearchParams } from "next/navigation";
 import Image from 'next/image';
 import CreditCard from '@/components/CreditCard';
 import '@/styles/donation.css';
@@ -27,6 +28,9 @@ export default function DonationPage() {
     count: number;
   }
 
+  const searchParams = useSearchParams(); //to read schoolId and item from the url
+
+
   const handleItemSelect = (item: string) => {
     setInputItem(item);
     setMatchedItems([]);
@@ -35,6 +39,36 @@ export default function DonationPage() {
     );
     setFilteredNeeds(matchingSchools);
   };
+
+    useEffect(() => {
+    const itemFromUrl = searchParams.get("item");
+    const schoolIdFromUrl = searchParams.get("schoolId");
+
+    if (itemFromUrl) {
+      setInputItem(itemFromUrl);
+    }
+
+    if (schoolIdFromUrl) {//otomatik olarak form dolu olsun diye
+      fetch(`/api/schools/${schoolIdFromUrl}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.name) {
+            setSelectedSchool(data.name);//fills in the school field in donation form
+          }
+        })
+        .catch(() => {
+          toast({
+            title: "Hata",
+            description: "Okul bilgisi alınamadı.",
+            type: "error",
+            open: true,
+            onOpenChange: () => {},
+          });
+        });
+    }
+  }, [searchParams]);
+
+
 
   useEffect(() => {
     const fetchNeeds = async () => {
