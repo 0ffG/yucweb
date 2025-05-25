@@ -20,6 +20,13 @@ export default function DonationPage() {
   const [filteredNeeds, setFilteredNeeds] = useState<Need[]>([]);
   const [donationItems, setDonationItems] = useState<{ item: string; count: number; school: string }[]>([]);
 
+  //for credit card details
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardName, setCardName] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCVV, setCardCVV] = useState('');
+
+
   const userId = 1;
 
   interface Need {
@@ -158,6 +165,16 @@ export default function DonationPage() {
   };
 
   const handleMoneyDonation = async () => {
+    if (!cardNumber || !cardName || !cardExpiry || !cardCVV) {
+      toast({
+        type: 'error',
+        title: 'Eksik Bilgi',
+        description: 'Lütfen tüm ödeme alanlarını doldurun.',
+        open: true,
+        onOpenChange: () => {},
+      });
+    return;
+    }
     if (!amount || Number(amount) <= 0) {
       toast({ type: 'error', title: 'Geçersiz Tutar', description: 'Geçerli bir tutar girin.', open: true, onOpenChange: () => {} });
       return;
@@ -300,11 +317,31 @@ export default function DonationPage() {
         <div className="popup-overlay">
           <div className="popup-content">
             <CreditCard />
-            <input className="popup-input" placeholder="Card Number" />
-            <input className="popup-input" placeholder="Cardholder Name" />
+            <input
+              className="popup-input"
+              placeholder="Card Number"
+              value={cardNumber}
+              onChange={(e) => setCardNumber(e.target.value)}
+            />
+            <input
+              className="popup-input"
+              placeholder="Cardholder Name"
+              value={cardName}
+              onChange={(e) => setCardName(e.target.value)}
+            />
             <div className="popup-row">
-              <input className="popup-input half" placeholder="MM/YY" />
-              <input className="popup-input half" placeholder="CVV" />
+              <input
+                className="popup-input half"
+                placeholder="MM/YY"
+                value={cardExpiry}
+                onChange={(e) => setCardExpiry(e.target.value)}
+              />
+              <input
+                className="popup-input half"
+                placeholder="CVV"
+                value={cardCVV}
+                onChange={(e) => setCardCVV(e.target.value)}
+              />
             </div>
             <button className="popup-confirm" onClick={handleMoneyDonation}>Ödemeyi Onayla</button>
             <button onClick={() => setShowPaymentPopup(false)} className="popup-cancel">İptal</button>
