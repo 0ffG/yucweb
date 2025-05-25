@@ -15,14 +15,15 @@ interface SchoolProfile {
   name: string;
   email: string;
   contact?: string;
-  location?: string;
+  location?: string; //location field eklendi
   needs: Need[];
 }
+
 
 export default function SchoolProfilePage() {
   const { id } = useParams();
   const searchParams = useSearchParams();
-  const error = searchParams.get("error");
+  const error = searchParams.get('error');
   const router = useRouter();
 
   const [school, setSchool] = useState<SchoolProfile | null>(null);
@@ -30,15 +31,13 @@ export default function SchoolProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (error === "not-authorized") {
+    if (error === 'not-authorized') {
       toast({
-
         type: 'error',
         title: 'Yetkisiz İşlem',
         description: 'Farklı bir profili düzenleyemezsiniz.',
         open: true,
         onOpenChange: () => {},
- 
       });
     }
   }, [error]);
@@ -98,14 +97,10 @@ export default function SchoolProfilePage() {
         <main className="container mx-auto px-4 py-8">
           <div className="flex flex-col lg:flex-row gap-8">
             <div className="lg:w-1/3 rounded border border-gray-300 p-6 shadow-md bg-gray-50">
-              <h2 className="mb-4 text-xl font-semibold text-center text-slate-800 border-b pb-2">
-                İLETİŞİM BİLGİLERİ
-              </h2>
+              <h2 className="mb-4 text-xl font-semibold text-center text-slate-800 border-b pb-2">İLETİŞİM BİLGİLERİ</h2>
+              <p className="text-gray-700"><strong>Email:</strong> {school.email}</p>
               <p className="text-gray-700">
-                <strong>Email:</strong> {school.email}
-              </p>
-              <p className="text-gray-700">
-                <strong>Konum:</strong> {school.location || "Konum belirtilmedi"}
+                  <strong>Konum:</strong> {school.location || "Konum belirtilmedi"}
               </p>
               <button
                 onClick={() => router.push(`/schools/${school.id}/edit`)}
@@ -116,26 +111,23 @@ export default function SchoolProfilePage() {
             </div>
 
             <div className="flex-1 rounded border border-gray-300 p-6 shadow-md">
-              <h2 className="mb-4 text-xl font-semibold text-center text-slate-800 border-b pb-2">
-                İHTİYAÇ LİSTESİ
-              </h2>
+              <h2 className="mb-4 text-xl font-semibold text-center text-slate-800 border-b pb-2">İHTİYAÇ LİSTESİ</h2>
               <div className="space-y-3 mb-6 max-h-80 overflow-y-auto pr-2 border rounded p-3 bg-gray-50">
                 {displayedNeeds.length > 0 ? (
                   displayedNeeds.map((need, index) => (
-                    <div
-                      key={index}
-                      className="rounded border p-3 flex justify-between items-center border-gray-300 bg-white"
+                    <button
+                        key={index}
+                        onClick={() => router.push(`/donate?schoolId=${school.id}&item=${encodeURIComponent(need.name)}`)}
+                        className="w-full text-left rounded border p-3 flex justify-between items-center border-gray-300 bg-white hover:bg-indigo-50 transition"
                     >
-                      <span className="font-medium text-gray-800">{need.name}</span>
+                      <span className="font-medium text-gray-800 underline">{need.name}</span>
                       <span className="text-sm font-semibold text-gray-600 bg-gray-200 px-2 py-1 rounded">
                         Adet: {need.quantity}
                       </span>
-                    </div>
+                    </button>
                   ))
                 ) : (
-                  <p className="text-center text-gray-500 italic py-4">
-                    Henüz ihtiyaç eklenmemiş.
-                  </p>
+                  <p className="text-center text-gray-500 italic py-4">Henüz ihtiyaç eklenmemiş.</p>
                 )}
               </div>
             </div>
