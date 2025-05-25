@@ -1,50 +1,111 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma'; // prisma.ts dosyanızın yolunu güncelleyin
+// Предполагаемый путь: app/api/user/[id]/route.ts
+import { cookies } from "next/headers";
+import prisma from "@/lib/prisma";
+import { verifyToken } from "@/lib/auth";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function DELETE(
-  request: Request,
+export async function GET(
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const userId = parseInt(params.id, 10);
-    if (isNaN(userId)) {
-      return NextResponse.json({ message: "Geçersiz kullanıcı ID" }, { status: 400 });
-    }
-
-    // Burada kullanıcıya bağlı diğer kayıtların durumu düşünülmelidir.
-    // Örneğin, bir kullanıcının bağışları varsa ne olacak?
-    // Prisma şemanızdaki onDelete kuralları bu durumu yönetebilir.
-    // Veya burada ek kontroller/işlemler yapmanız gerekebilir.
-
-    // Örnek: Önce kullanıcıya bağlı MoneyDistribution kayıtlarını silmek gerekebilir.
-    // Bu, şemanızdaki onDelete cascade tanımlı değilse manuel yapılmalıdır.
-    // await prisma.moneyDistribution.deleteMany({ where: { schoolId: userId } });
-    // await prisma.materialDonation.deleteMany({ where: { donorId: userId } });
-    // await prisma.materialDonation.deleteMany({ where: { schoolId: userId } });
-    // await prisma.moneyDonation.deleteMany({ where: { donorId: userId } });
-    // await prisma.inventory.deleteMany({ where: { schoolId: userId } });
-
-
-    await prisma.user.delete({
-      where: { id: userId },
-    });
-    return NextResponse.json({ message: "Kullanıcı silindi" }, { status: 200 });
-  } catch (error) {
-    console.error("Kullanıcı silinemedi:", error);
-    if (typeof error === 'object' && error !== null && 'code' in error) {
-      const err = error as { code?: string; message?: string };
-      if (err.code === 'P2025') { // Prisma: Kayıt bulunamadı
-        return NextResponse.json({ message: "Silinecek kullanıcı bulunamadı" }, { status: 404 });
-      }
-      // P2003: Foreign key constraint failed on the field: `...`
-      // Bu hata, silinmeye çalışılan kullanıcının başka tablolarda referansları olduğu anlamına gelir.
-      // Bu durumda, önce bağlı kayıtları silmeniz veya `onDelete` kurallarını şemanızda ayarlamanız gerekir.
-      if (err.code === 'P2003') {
-        return NextResponse.json({ message: "Kullanıcı silinemedi. Kullanıcıya bağlı kayıtlar (bağışlar, envanter vb.) bulunuyor." }, { status: 409 }); // 409 Conflict
-      }
-      return NextResponse.json({ message: "Sunucu hatası", error: err.message }, { status: 500 });
-    }
-    return NextResponse.json({ message: "Sunucu hatası", error: String(error) }, { status: 500 });
+  const requestedId = parseInt(params.id);
+  if (isNaN(requestedId)) {
+    return NextResponse.json({ error: "Geçersiz ID" }, { status: 400 });
   }
+
+  const token = (await cookies()).get("token")?.value;
+  if (!token) {
+    return NextResponse.json({ error: "Yetkisiz. Giriş yapınız." }, { status: 401 });
+  }
+
+  const payload = verifyToken(token);
+  if (!payload) {
+    return NextResponse.json({ error: "Yetkisiz. Geçersiz token." }, { status: 403 });
+  }
+
+  // Yetkilendirme mantığı: Admin tüm profilleri görebilir,
+  // donor rolündeki kullanıcı sadece kendi profilini görebilir.
+  const isOwner = payload.userId === requestedId && payload.role === "donor";
+  const isAdmin = payload.role === "admin";
+
+  if (!isOwner && !isAdmin) {
+    return NextResponse.json({ error: "Yetkisiz erişim." }, { status: 403 });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: requestedId },
+    include: {
+      materialSent: {
+        include: {
+          school: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+      moneyDonations: true,
+    },
+  });
+
+  if (!user) {
+    return NextResponse.json({ error: "Kullanıcı bulunamadı." }, { status: 404 });
+  }
+
+  // 💰 Toplam para bağışı hesaplama
+  const totalMoneyDonated = user.moneyDonations.reduce((sum, donation) => sum + donation.amount, 0);
+
+  return NextResponse.json({
+    id: user.id,
+    name: user.name,
+    lastName: user.lastName,
+    email: user.email,
+    role: user.role,
+    photo: user.photo,
+    totalMoneyDonated,
+    materialDonations: user.materialSent.map((donation) => ({
+      schoolId: donation.school?.id,
+      schoolName: donation.school?.name ?? "Bilinmeyen Okul",
+      item: donation.item,
+      amount: donation.amount,
+      createdAt: donation.createdAt,
+    })),
+  });
 }
 
+// Mevcut DELETE veya diğer metodlar varsa burada yer alabilir.
+// Kullanıcı silme işlemi için DELETE metodunun da bu dosyada veya
+// app/api/user/[id]/route.ts altında olması beklenir.
+// Örnek:
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  const requestedId = parseInt(params.id);
+  if (isNaN(requestedId)) {
+    return NextResponse.json({ error: "Geçersiz ID" }, { status: 400 });
+  }
+
+  const token = (await cookies()).get("token")?.value;
+  if (!token) {
+    return NextResponse.json({ error: "Yetkisiz. Giriş yapınız." }, { status: 401 });
+  }
+
+  const payload = verifyToken(token);
+  if (!payload || payload.role !== "admin") {
+    // Sadece adminlerin kullanıcı silebildiğini varsayıyoruz
+    return NextResponse.json({ error: "Yetkisiz erişim. Kullanıcı silme işlemi için Admin rolü gereklidir." }, { status: 403 });
+  }
+
+  try {
+    await prisma.user.delete({
+      where: { id: requestedId },
+    });
+    return NextResponse.json({ message: "Kullanıcı başarıyla silindi." }, { status: 200 });
+  } catch (error) {
+    console.error("Error deleting user:", error);
+    return NextResponse.json({ error: "Kullanıcı silinirken bir hata oluştu." }, { status: 500 });
+  }
+}

@@ -1,8 +1,10 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation"; // ✅ Yönlendirme için
 import Link from "next/link";
 
 export default function RegisterPage() {
+  const router = useRouter(); // ✅ Router nesnesi
   const [formData, setFormData] = useState({
     name: "",
     surname: "",
@@ -44,6 +46,7 @@ export default function RegisterPage() {
       const data = await res.json();
       if (res.ok) {
         alert("✅ Kayıt başarılı!");
+        router.push("/"); // ✅ Anasayfaya yönlendirme
       } else {
         alert(`🚫 Kayıt başarısız: ${data.error}`);
       }
@@ -52,6 +55,7 @@ export default function RegisterPage() {
       console.error(err);
     }
   };
+
 
   const isSchool = formData.role === "school";
   const isDonor = formData.role === "donor";
