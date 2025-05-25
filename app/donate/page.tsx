@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { YucLogo } from '@/components/yuc-logo';
+import { useSearchParams } from "next/navigation";
 import Image from 'next/image';
 import CreditCard from '@/components/CreditCard';
 import '@/styles/donation.css';
@@ -14,12 +15,9 @@ export default function DonationPage() {
   const [selectedSchool, setSelectedSchool] = useState('');
   const [donationCount, setDonationCount] = useState<number>(0);
   const [showPaymentPopup, setShowPaymentPopup] = useState(false);
-  const [allNeeds, setAllNeeds] = useState<Need[]>([]);
-  const [matchedItems, setMatchedItems] = useState<string[]>([]);
   const [filteredNeeds, setFilteredNeeds] = useState<Need[]>([]);
-  const [donationItems, setDonationItems] = useState<{ item: string; count: number; school: string }[]>([]);
 
-  const userId = 1;
+  const userId = 1; // TODO: Oturumdan al
 
   interface Need {
     school: string;
@@ -27,40 +25,58 @@ export default function DonationPage() {
     count: number;
   }
 
-  const handleItemSelect = (item: string) => {
-    setInputItem(item);
-    setMatchedItems([]);
-    const matchingSchools = allNeeds.filter(
-      (need) => need.item.toLowerCase() === item.toLowerCase()
-    );
-    setFilteredNeeds(matchingSchools);
-  };
+  const searchParams = useSearchParams(); //to read schoolId and item from the url
+
+  useEffect(() => {
+    const itemFromUrl = searchParams.get("item");
+    const schoolIdFromUrl = searchParams.get("schoolId");
+
+    if (itemFromUrl) {
+      setInputItem(itemFromUrl);
+    }
+
+    if (schoolIdFromUrl) {//otomatik olarak form dolu olsun diye
+      fetch(`/api/schools/${schoolIdFromUrl}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.name) {
+            setSelectedSchool(data.name);//fills in the school field in donation form
+          }
+        })
+        .catch(() => {
+          toast({
+            title: "Hata",
+            description: "Okul bilgisi alınamadı.",
+            type: "error",
+            open: true,
+            onOpenChange: () => {},
+          });
+        });
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchNeeds = async () => {
       if (!inputItem.trim()) {
-        setAllNeeds([]);
-        setMatchedItems([]);
         setFilteredNeeds([]);
         return;
       }
       try {
         const res = await fetch(`/api/needs?item=${encodeURIComponent(inputItem)}`);
         if (!res.ok) throw new Error();
-        const data: Need[] = await res.json();
-        setAllNeeds(data);
-        const uniqueItems = Array.from(
-          new Set(
-            data
-              .map((need) => need.item)
-              .filter((item) => item.toLowerCase().includes(inputItem.toLowerCase()))
-          )
-        );
-        setMatchedItems(uniqueItems);
+        const data = await res.json();
+        setFilteredNeeds(data);
       } catch {
-        toast({ type: 'error', title: 'Hata', description: 'İhtiyaçlar alınamadı.', open: true, onOpenChange: () => {} });
+        toast({
+          type: 'error',
+          title: 'Hata',
+          description: 'İhtiyaçlar alınamadı.',
+          open: true,
+          onOpenChange: () => {},
+        });
       }
-    };
+    };   
+
     fetchNeeds();
   }, [inputItem]);
 
@@ -68,198 +84,228 @@ export default function DonationPage() {
     setSelectedSchool(schoolName);
   };
 
-  const handleAddItem = () => {
-    if (!inputItem || donationCount <= 0) {
-      toast({ type: 'error', title: 'Eksik Bilgi', description: 'Malzeme ve adet girin.', open: true, onOpenChange: () => {} });
-      return;
-    }
-    if (!selectedSchool) {
-      toast({ type: 'error', title: 'Okul Seçilmedi', description: 'Listeye eklemeden önce lütfen bir okul seçin.', open: true, onOpenChange: () => {} });
-      return;
-    }
-    const exists = donationItems.find(item => item.item.toLowerCase() === inputItem.toLowerCase() && item.school === selectedSchool);
-    if (exists) {
-      toast({ type: 'error', title: 'Zaten Eklendi', description: 'Bu eşya zaten aynı okula eklenmiş.', open: true, onOpenChange: () => {} });
-      return;
-    }
-    setDonationItems([...donationItems, { item: inputItem, count: donationCount, school: selectedSchool }]);
-    setInputItem('');
-    setDonationCount(0);
-    setMatchedItems([]);
-    setFilteredNeeds([]);
-  };
-
-  const removeItem = (index: number) => {
-    setDonationItems(donationItems.filter((_, i) => i !== index));
-  };
-
   const handleDonationSubmit = async () => {
-    if (donationItems.length === 0) {
-      toast({ type: 'error', title: 'Eksik Bilgi', description: 'Bağış listesi boş olamaz.', open: true, onOpenChange: () => {} });
+    if (!selectedSchool || !donationCount || !inputItem) {
+      toast({
+        type: 'error',
+        title: 'Eksik Bilgi',
+        description: 'Lütfen okul, eşya ve adet bilgilerini doldurun.',
+        open: true,
+        onOpenChange: () => {},
+      });
       return;
     }
-    try {
-      for (const donation of donationItems) {
-        const res = await fetch('/api/donate-material', {
-          method: 'POST',
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            schoolName: donation.school,
-            itemName: donation.item,
-            count: donation.count,
-          }),
-        });
 
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData?.error || 'Bağış işlemi başarısız.');
-        }
+    try {
+      const res = await fetch('/api/donate-material', {
+        method: 'POST',
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          schoolName: selectedSchool,
+          itemName: inputItem,
+          count: donationCount,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast({
+          type: 'error',
+          title: 'Bağış Başarısız',
+          description: data.error || 'Bir hata oluştu.',
+          open: true,
+          onOpenChange: () => {},
+        });
+        return;
       }
 
-      toast({ type: 'success', title: 'Bağış Başarılı!', description: 'Tüm bağışlar ilgili okullara gönderildi.', open: true, onOpenChange: () => {} });
-      setDonationItems([]);
-    } catch (err: any) {
-      toast({ type: 'error', title: 'Sunucu Hatası', description: err.message || 'Bağış yapılırken sorun oluştu.', open: true, onOpenChange: () => {} });
+      toast({
+        type: 'success',
+        title: 'Bağış Başarılı!',
+        description: `${selectedSchool} okuluna ${donationCount} adet "${inputItem}" bağışı yapıldı.`,
+        open: true,
+        onOpenChange: () => {},
+      });
+
+      setFilteredNeeds(prev =>
+        prev.map(need =>
+          need.school === selectedSchool && need.item.toLowerCase() === inputItem.toLowerCase()
+            ? { ...need, count: need.count - donationCount }
+            : need
+        )
+      );
+
+      setDonationCount(0);
+    } catch (err) {
+      toast({
+        type: 'error',
+        title: 'Sunucu Hatası',
+        description: 'Bağış yapılırken bir sorun oluştu.',
+        open: true,
+        onOpenChange: () => {},
+      });
     }
   };
 
   const handleMoneyDonation = async () => {
     if (!amount || Number(amount) <= 0) {
-      toast({ type: 'error', title: 'Geçersiz Tutar', description: 'Geçerli bir tutar girin.', open: true, onOpenChange: () => {} });
+      toast({
+        type: 'error',
+        title: 'Geçersiz Tutar',
+        description: 'Lütfen geçerli bir bağış miktarı girin.',
+        open: true,
+        onOpenChange: () => {},
+      });
       return;
     }
+
     try {
-      await fetch('/api/donate-money', {
+      const res = await fetch('/api/donate-money', {
         method: 'POST',
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId, amount: Number(amount) }),
+        body: JSON.stringify({
+          userId,
+          amount: Number(amount),
+        }),
       });
-      toast({ type: 'success', title: 'Ödeme Alındı', description: `Bağışınız: ${amount}₺`, open: true, onOpenChange: () => {} });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        toast({
+          type: 'error',
+          title: 'Bağış Başarısız',
+          description: data.error || 'Bir hata oluştu.',
+          open: true,
+          onOpenChange: () => {},
+        });
+        return;
+      }
+
+      toast({
+        type: 'success',
+        title: 'Ödeme Alındı',
+        description: `Bağışınız başarıyla işlendi: ${amount}₺`,
+        open: true,
+        onOpenChange: () => {},
+      });
+
       setTimeout(() => window.location.href = '/', 3000);
-    } catch {
-      toast({ type: 'error', title: 'Sunucu Hatası', description: 'Bağış işlenemedi.', open: true, onOpenChange: () => {} });
+    } catch (err) {
+      toast({
+        type: 'error',
+        title: 'Sunucu Hatası',
+        description: 'Bağış işlenemedi.',
+        open: true,
+        onOpenChange: () => {},
+      });
     }
   };
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="text-center py-6">
-        <Image src="/logo2.jpeg" alt="Logo" width={100} height={100} className="mx-auto" />
-        <h2 className="text-xl font-semibold mt-2">Bir çocuk daha mutlu olsun!</h2>
+      <div className="logo-slogan-box">
+        <div className="logo" style={{ transform: 'scale(1.2)' }}>
+          <Image src="/logo2.jpeg" alt="Logo" width={100} height={100} className="site-icon" />
+        </div>
+        <div className="slogan">Bir çocuk daha mutlu olsun!</div>
       </div>
 
-      <div className="flex justify-center gap-4 mb-6">
+      <div className="button-group">
         <button className="donate-btn item" onClick={() => setDonationType('material')}>MALZEME YARDIMI</button>
         <button className="donate-btn money" onClick={() => setDonationType('money')}>PARA YARDIMI</button>
       </div>
 
-      <div className="card mx-auto w-full max-w-xl">
-        {donationType === 'material' && (
-          <>
-            <input
-              className="custom-amount w-full"
-              placeholder="Yardım yapmak istediğiniz eşyayı giriniz"
-              value={inputItem}
-              onChange={e => setInputItem(e.target.value)}
-            />
-            {matchedItems.length > 0 && (
-              <ul className="absolute left-0 right-0 mt-1 w-full rounded-lg border border-blue-400 bg-white shadow-md max-h-60 overflow-y-auto text-sm z-20">
-                {matchedItems.map((item, index) => (
-                  <li
-                    key={index}
-                    onClick={() => handleItemSelect(item)}
-                    className="px-4 py-2 hover:bg-blue-100 hover:text-blue-700 cursor-pointer font-semibold"
-                  >
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <input
-              type="number"
-              min="1"
-              className="custom-amount mt-2 w-full"
-              placeholder="Adet"
-              value={donationCount}
-              onChange={(e) => setDonationCount(Number(e.target.value))}
-            />
-            <button className="donate-confirm mt-2" onClick={handleAddItem}>Listeye Ekle</button>
+      <hr />
 
-            <div className="mt-4 border-t pt-4">
-  <h4 className="font-semibold mb-2">Bağış Listesi:</h4>
-  <ul className="space-y-2">
-    {donationItems.map((item, idx) => (
-      <li key={idx} className="flex justify-between items-center bg-gray-100 rounded-lg px-4 py-2">
-        <span className="font-medium">
-          {item.item} - {item.count} adet <span className="text-gray-500">({item.school})</span>
-        </span>
-        <button
-          className="text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded-md text-sm"
-          onClick={() => removeItem(idx)}
-        >
-          Sil
-        </button>
-      </li>
-    ))}
-  </ul>
+      <div className="dynamic-section">
+        <div className="card">
+          {donationType === 'material' && (
+            <>
+              <h3>YARDIM YAPMAK İSTEDİĞİNİZ EŞYAYI GİRİNİZ</h3>
+              <input
+                className="custom-amount"
+                placeholder="Yardım yapmak istediğiniz eşyayı giriniz"
+                value={inputItem}
+                onChange={e => setInputItem(e.target.value)}
+              />
 
-            </div>
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '20px', marginBottom: '20px' }}>
+                <div style={{ textAlign: 'left' }}>
+                  <label style={{ display: 'block', marginBottom: '10px' }}>
+                    <strong>Seçilen Okul:</strong>
+                    <input
+                      type="text"
+                      className="custom-amount"
+                      value={selectedSchool}
+                      placeholder="Okul adı yazın veya listeden seçin"
+                      onChange={(e) => setSelectedSchool(e.target.value)}
+                    />
+                  </label>
+                  <label style={{ display: 'block', marginBottom: '10px' }}>
+                    <strong>Bağış Adedi:</strong>
+                    <input
+                      type="number"
+                      min="1"
+                      className="custom-amount"
+                      value={donationCount}
+                      onChange={(e) => setDonationCount(Math.max(0, Number(e.target.value)))}
+                    />
+                  </label>
+                </div>
+              </div>
 
-            <input
-              type="text"
-              className="custom-amount mt-4 w-full"
-              placeholder="Okul adı"
-              value={selectedSchool}
-              onChange={(e) => setSelectedSchool(e.target.value)}
-            />
+              <button className="donate-confirm" style={{ marginTop: '20px' }} onClick={handleDonationSubmit}>
+                Bağış Yap
+              </button>
 
-            <button className="donate-confirm mt-4" onClick={handleDonationSubmit}>Bağış Yap</button>
-
-            <div className="mt-6">
-              <h4 className="font-semibold mb-2">Okullar:</h4>
-              <div className="max-h-48 overflow-y-auto border rounded-md">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-gray-100 font-medium">
+              <div style={{ maxHeight: '300px', overflowY: 'auto', marginTop: '20px' }}>
+                <table>
+                  <thead>
                     <tr>
-                      <th className="px-4 py-2">OKUL ADI</th>
-                      <th className="px-4 py-2">İHTİYAÇ ADEDİ</th>
+                      <th>OKUL ADI</th>
+                      <th>İHTİYAÇ ADEDİ</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredNeeds.map((entry, index) => (
                       <tr
                         key={index}
-                        className={`cursor-pointer ${selectedSchool === entry.school ? 'bg-gray-100' : ''}`}
+                        style={{ cursor: 'pointer', backgroundColor: selectedSchool === entry.school ? '#f1f1f1' : '' }}
                         onClick={() => handleSchoolSelect(entry.school)}
                       >
-                        <td className="px-4 py-2">{entry.school}</td>
-                        <td className="px-4 py-2">{entry.count}</td>
+                        <td>{entry.school}</td>
+                        <td>{entry.count}</td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
 
-        {donationType === 'money' && (
-          <>
-            <div className="donation-options">
-              <button className="amount-btn" onClick={() => setAmount(100)}>100₺</button>
-              <button className="amount-btn" onClick={() => setAmount(300)}>300₺</button>
-              <button className="amount-btn" onClick={() => setAmount('')}>DİĞER</button>
-            </div>
-            <input
-              type="number"
-              className="custom-amount mt-2"
-              placeholder="Tutar giriniz"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
-            <button className="donate-confirm mt-4" onClick={() => setShowPaymentPopup(true)}>Ödemeyi Bitir</button>
-          </>
-        )}
+          {donationType === 'money' && (
+            <>
+              <h3>YOUR SINGLE DONATION</h3>
+              <div className="donation-options">
+                <button className="amount-btn" onClick={() => setAmount(100)}>100₺</button>
+                <button className="amount-btn" onClick={() => setAmount(300)}>300₺</button>
+                <button className="amount-btn" onClick={() => setAmount('')}>DİĞER</button>
+              </div>
+              <input
+                type="number"
+                className="custom-amount"
+                placeholder="Tutar giriniz"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+              <button className="donate-confirm" onClick={() => setShowPaymentPopup(true)}>
+                Ödemeyi Bitir
+              </button>
+            </>
+          )}
+        </div>
       </div>
 
       {showPaymentPopup && (
@@ -272,8 +318,15 @@ export default function DonationPage() {
               <input className="popup-input half" placeholder="MM/YY" />
               <input className="popup-input half" placeholder="CVV" />
             </div>
-            <button className="popup-confirm" onClick={handleMoneyDonation}>Ödemeyi Onayla</button>
-            <button onClick={() => setShowPaymentPopup(false)} className="popup-cancel">İptal</button>
+            <button
+              className="popup-confirm"
+              onClick={handleMoneyDonation}
+            >
+              Ödemeyi Onayla
+            </button>
+            <button onClick={() => setShowPaymentPopup(false)} className="popup-cancel">
+              İptal
+            </button>
           </div>
         </div>
       )}
