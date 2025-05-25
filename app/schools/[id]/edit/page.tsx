@@ -15,11 +15,12 @@ interface School {
   id: number;
   name: string;
   email: string;
+  location?: string;
   needs: Need[];
 }
 
 interface User {
-  id: number; 
+  id: number;
   role: string;
 }
 
@@ -37,6 +38,10 @@ export default function EditSchoolProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthorized, setIsAuthorized] = useState(false);
 
+  const [editName, setEditName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -45,7 +50,11 @@ export default function EditSchoolProfilePage() {
         const userData = await res.json();
         setUser(userData);
       } catch {
-        toast({ title: "Hata", description: "Kullanıcı bilgisi alınamadı.", variant: "destructive" });
+        toast({
+          title: "Hata",
+          description: "Kullanıcı bilgisi alınamadı.",
+          variant: "destructive",
+        });
       }
     };
     fetchUser();
@@ -58,9 +67,16 @@ export default function EditSchoolProfilePage() {
         if (!res.ok) throw new Error("Okul bulunamadı");
         const data = await res.json();
         setSchool(data);
+        setEditName(data.name || "");
+        setEditEmail(data.email || "");
+        setEditLocation(data.location || "");
         setNeeds(data.needs);
       } catch {
-        toast({ title: "Hata", description: "Okul verisi alınamadı.", variant: "destructive" });
+        toast({
+          title: "Hata",
+          description: "Okul verisi alınamadı.",
+          variant: "destructive",
+        });
       }
     };
     fetchSchool();
@@ -79,6 +95,43 @@ export default function EditSchoolProfilePage() {
     setNeedQuantity("");
   };
 
+  const handleProfileUpdate = async () => {
+    try {
+      const res = await fetch(`/api/schools/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: editName,
+          email: editEmail,
+          location: editLocation,
+        }),
+      });
+
+      if (!res.ok) throw new Error();
+      const updated = await res.json();
+      setSchool(updated);
+
+      const localUser = localStorage.getItem("user");
+      if (localUser) {
+        const parsedUser = JSON.parse(localUser);
+        parsedUser.name = updated.name;
+        localStorage.setItem("user", JSON.stringify(parsedUser));
+      }
+
+      toast({
+        title: "Başarılı",
+        description: "Profil bilgileri güncellendi.",
+      });
+    } catch {
+      toast({
+        title: "Hata",
+        description: "Profil güncellenemedi.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleAddNeed = async () => {
     if (!needName || !needQuantity || !isAuthorized) return;
 
@@ -92,10 +145,17 @@ export default function EditSchoolProfilePage() {
       if (!res.ok) throw new Error();
       const newNeed = await res.json();
       setNeeds(prev => [...prev, newNeed]);
-      toast({ title: "Eklendi", description: `${needName} başarıyla eklendi.` });
+      toast({
+        title: "Eklendi",
+        description: `${needName} başarıyla eklendi.`,
+      });
       clearForm();
     } catch {
-      toast({ title: "Hata", description: "İhtiyaç eklenemedi.", variant: "destructive" });
+      toast({
+        title: "Hata",
+        description: "İhtiyaç eklenemedi.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -116,10 +176,17 @@ export default function EditSchoolProfilePage() {
       const newList = [...needs];
       newList[selectedNeedIndex] = updated;
       setNeeds(newList);
-      toast({ title: "Güncellendi", description: `${updated.item} başarıyla güncellendi.` });
+      toast({
+        title: "Güncellendi",
+        description: `${updated.item} başarıyla güncellendi.`,
+      });
       clearForm();
     } catch {
-      toast({ title: "Hata", description: "Güncelleme başarısız.", variant: "destructive" });
+      toast({
+        title: "Hata",
+        description: "Güncelleme başarısız.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -137,10 +204,17 @@ export default function EditSchoolProfilePage() {
       if (!res.ok) throw new Error("Delete failed");
 
       setNeeds(prev => prev.filter((_, idx) => idx !== selectedNeedIndex));
-      toast({ title: "Silindi", description: `${need.name} kaldırıldı.` });
+      toast({
+        title: "Silindi",
+        description: `${need.name} kaldırıldı.`,
+      });
       clearForm();
     } catch {
-      toast({ title: "Hata", description: "Silme işlemi başarısız.", variant: "destructive" });
+      toast({
+        title: "Hata",
+        description: "Silme işlemi başarısız.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -191,10 +265,7 @@ export default function EditSchoolProfilePage() {
               onChange={(e) => setNeedQuantity(e.target.value)}
             />
             <div className="flex gap-2 mt-2">
-              <button
-                onClick={handleAddNeed}
-                className="px-4 py-2 bg-green-600 text-white rounded"
-              >
+              <button onClick={handleAddNeed} className="px-4 py-2 bg-green-600 text-white rounded">
                 Ekle
               </button>
               <button
@@ -218,8 +289,40 @@ export default function EditSchoolProfilePage() {
               </button>
             )}
           </div>
+
+          <div className="mt-10 p-4 border rounded bg-gray-50">
+            <h2 className="text-xl font-semibold mb-4">Profil Bilgilerini Güncelle</h2>
+            <div className="space-y-2">
+              <input
+                className="w-full p-2 border rounded"
+                placeholder="Okul Adı"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+              />
+              <input
+                className="w-full p-2 border rounded"
+                placeholder="Email"
+                type="email"
+                value={editEmail}
+                onChange={(e) => setEditEmail(e.target.value)}
+              />
+              <input
+                className="w-full p-2 border rounded"
+                placeholder="Konum"
+                value={editLocation}
+                onChange={(e) => setEditLocation(e.target.value)}
+              />
+              <button
+                onClick={handleProfileUpdate}
+                className="mt-2 px-4 py-2 bg-indigo-600 text-white rounded"
+              >
+                Profili Kaydet
+              </button>
+            </div>
+          </div>
         </>
       )}
+
       <Toaster />
     </div>
   );

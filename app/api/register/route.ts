@@ -51,23 +51,32 @@ export async function POST(request: Request) {
   }
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
+  const existingUser = await prisma.user.findUnique({
+    where: { email },
+  });//checking for existing user
 
-    const user = await prisma.user.create({
-      data: {
-        name,
-        lastName: mappedRole === "donor" ? surname! : '',
-        location: mappedRole === "school" ? location! : null,
-        email,
-        password: hashedPassword,
-        role: mappedRole,
-        photo: photoUrl?.trim() || null
-      }
-    });
-
-    return NextResponse.json({ message: 'Kayıt başarılı', user }, { status: 201 });
-  } catch (error) {
-    console.error("Kayıt hatası:", error);
-    return NextResponse.json({ error: 'Sunucu hatası.' }, { status: 500 });
+  if (existingUser) {
+    return NextResponse.json({ error: 'Bu e-posta adresi zaten kullanılıyor.' }, { status: 409 });
   }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const user = await prisma.user.create({
+    data: {
+      name,
+      lastName: mappedRole === "donor" ? surname! : '',
+      location: mappedRole === "school" ? location! : null,
+      email,
+      password: hashedPassword,
+      role: mappedRole,
+      photo: photoUrl?.trim() || null
+    }
+  });
+
+  return NextResponse.json({ message: 'Kayıt başarılı', user }, { status: 201 });
+} catch (error) {
+  console.error("Kayıt hatası:", error);
+  return NextResponse.json({ error: 'Sunucu hatası.' }, { status: 500 });
+}
+
 }
