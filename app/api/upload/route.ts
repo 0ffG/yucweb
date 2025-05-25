@@ -1,18 +1,17 @@
-import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
-import { NextResponse } from 'next/server';
+import { NextRequest } from "next/server";
+import { put } from "@vercel/blob";
 
-export async function POST(request: Request): Promise<NextResponse> {
-  const body = (await request.json()) as HandleUploadBody;
+export async function POST(req: NextRequest) {
+  const formData = await req.formData();
+  const file = formData.get("file") as File;
 
-  return handleUpload({
-    body,
-    request,
-    onBeforeGenerateToken: async () => ({
-      allowedContentTypes: ['image/jpeg', 'image/png'],
-      addRandomSuffix: true,
-    }),
-    onUploadCompleted: async ({ blob }) => {
-      console.log('Yükleme tamamlandı:', blob.url);
-    },
+  if (!file) {
+    return new Response("No file", { status: 400 });
+  }
+
+  const blob = await put(file.name, file, {
+    access: "public", // herkese açık link üretir
   });
+
+  return Response.json({ url: blob.url });
 }

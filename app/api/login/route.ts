@@ -1,4 +1,4 @@
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import prisma from "@/lib/prisma";
 import { generateToken } from '@/lib/auth';
 import { NextResponse } from 'next/server';

@@ -1,10 +1,10 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation"; // ✅ Yönlendirme için
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function RegisterPage() {
-  const router = useRouter(); // ✅ Router nesnesi
+  const router = useRouter();
   const [formData, setFormData] = useState({
     name: "",
     surname: "",
@@ -46,7 +46,7 @@ export default function RegisterPage() {
       const data = await res.json();
       if (res.ok) {
         alert("✅ Kayıt başarılı!");
-        router.push("/"); // ✅ Anasayfaya yönlendirme
+        router.push("/");
       } else {
         alert(`🚫 Kayıt başarısız: ${data.error}`);
       }
@@ -55,7 +55,6 @@ export default function RegisterPage() {
       console.error(err);
     }
   };
-
 
   const isSchool = formData.role === "school";
   const isDonor = formData.role === "donor";
@@ -138,11 +137,28 @@ export default function RegisterPage() {
               </select>
 
               <input
-                type="text"
-                name="photoUrl"
-                placeholder="Fotoğraf URL"
-                value={formData.photoUrl}
-                onChange={handleChange}
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+
+                  const formDataUpload = new FormData();
+                  formDataUpload.append("file", file);
+
+                  const res = await fetch("/api/upload", {
+                    method: "POST",
+                    body: formDataUpload,
+                  });
+
+                  const data = await res.json();
+                  if (res.ok && data.url) {
+                    setFormData((prev) => ({ ...prev, photoUrl: data.url }));
+                    alert("Fotoğraf yüklendi!");
+                  } else {
+                    alert("Fotoğraf yüklenemedi.");
+                  }
+                }}
                 className="w-3/4 rounded-xl border border-black p-2"
               />
             </div>
