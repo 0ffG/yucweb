@@ -22,6 +22,11 @@ export default function AdminProfile() {
   const [moneyDistributions, setMoneyDistributions] = useState<any[]>([]); // Para dağıtım geçmişi için state
   const [schools, setSchools] = useState<any[]>([]); // Okullar için state
 
+  const [broadcastSubject, setBroadcastSubject] = useState("");
+  const [broadcastMessage, setBroadcastMessage] = useState("");
+  const [broadcastLoading, setBroadcastLoading] = useState(false);
+  const [broadcastResult, setBroadcastResult] = useState<string | null>(null);
+
   const fetchUsers = async () => {
     try {
       const res = await fetch('/api/admin/users');
@@ -155,6 +160,31 @@ export default function AdminProfile() {
       setMoneyDonationId("");
     } catch (err) {
       console.error("Para dağıtılamadı", err);
+    }
+  };
+
+  const handleBroadcastEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBroadcastLoading(true);
+    setBroadcastResult(null);
+    try {
+      const res = await fetch("/api/admin/broadcast-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subject: broadcastSubject, message: broadcastMessage })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setBroadcastResult("Tüm kullanıcılara e-posta gönderildi.");
+        setBroadcastSubject("");
+        setBroadcastMessage("");
+      } else {
+        setBroadcastResult(data.error || "Bir hata oluştu.");
+      }
+    } catch (err) {
+      setBroadcastResult("Bir hata oluştu.");
+    } finally {
+      setBroadcastLoading(false);
     }
   };
 
@@ -392,6 +422,36 @@ export default function AdminProfile() {
             </table>
             {schools.length === 0 && <p className="text-center text-gray-500 py-4">Kayıtlı okul bulunamadı.</p>}
           </div>
+        </div>
+
+        {/* Tüm Kullanıcılara E-posta Gönder */}
+        <div className="bg-white shadow-md p-6 rounded-2xl border border-gray-200">
+          <h2 className="text-xl font-semibold mb-4">Tüm Kullanıcılara E-posta Gönder</h2>
+          <form onSubmit={handleBroadcastEmail} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Konu"
+              value={broadcastSubject}
+              onChange={e => setBroadcastSubject(e.target.value)}
+              className="border p-2 w-full rounded"
+              required
+            />
+            <textarea
+              placeholder="Mesaj"
+              value={broadcastMessage}
+              onChange={e => setBroadcastMessage(e.target.value)}
+              className="border p-2 w-full rounded min-h-[100px]"
+              required
+            />
+            <button
+              type="submit"
+              className="bg-blue-700 text-white px-4 py-2 rounded hover:bg-blue-800 disabled:opacity-60"
+              disabled={broadcastLoading}
+            >
+              {broadcastLoading ? "Gönderiliyor..." : "Gönder"}
+            </button>
+            {broadcastResult && <p className="mt-2 text-center text-sm text-blue-700">{broadcastResult}</p>}
+          </form>
         </div>
 
       </main>

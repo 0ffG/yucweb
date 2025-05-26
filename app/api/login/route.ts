@@ -6,8 +6,18 @@ import { NextResponse } from 'next/server';
 export async function POST(request: Request) {
   const { email, password } = await request.json();
 
-  // Kullanıcıyı e-posta ile bul
-  const user = await prisma.user.findUnique({ where: { email } });
+  // Kullanıcıyı e-posta ile bul (emailVerified ile birlikte)
+  const user = await prisma.user.findUnique({ 
+    where: { email },
+    select: {
+      id: true,
+      email: true,
+      password: true,
+      name: true,
+      role: true,
+      emailVerified: true
+    }
+  });
 
   if (!user) {
     return NextResponse.json({ error: 'Geçersiz email veya şifre.' }, { status: 401 });
@@ -17,6 +27,11 @@ export async function POST(request: Request) {
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
     return NextResponse.json({ error: 'Geçersiz email veya şifre.' }, { status: 401 });
+  }
+
+  // E-posta doğrulandı mı kontrolü
+  if (!user.emailVerified) {
+    return NextResponse.json({ error: 'Lütfen e-posta adresinizi doğrulayın.' }, { status: 401 });
   }
 
   // JWT oluştur

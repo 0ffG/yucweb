@@ -7,75 +7,73 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  admin
-  donor
-  school
-}
-
 model User {
-  id        Int     @id @default(autoincrement())
-  name      String
-  lastName  String?
-  location String?
-  photo     String?
-  email     String  @unique
-  password  String
-  role      Role
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  totalMoneyDonated Int @default(0) 
-  materialSent       MaterialDonation[]   @relation("DonorMaterialDonations")
-  materialReceived   MaterialDonation[]   @relation("SchoolMaterialDonations")
+  id                 Int                 @id @default(autoincrement())
+  name               String
+  lastName           String?
+  location           String?
+  photo              String?
+  email              String              @unique
+  password           String
+  role               Role
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  totalMoneyDonated  Int                 @default(0)
   inventories        Inventory[]
+  materialSent       MaterialDonation[]  @relation("DonorMaterialDonations")
+  materialReceived   MaterialDonation[]  @relation("SchoolMaterialDonations")
+  moneyDistributions MoneyDistribution[] @relation("SchoolDistributions")
   moneyDonations     MoneyDonation[]
-  moneyDistributions MoneyDistribution[]  @relation("SchoolDistributions")
+  emailVerified      Boolean             @default(false)
+  verificationToken  String?
 }
 
 model Inventory {
-  id        Int    @id @default(autoincrement())
-  item      String
-  amount    Int
-  schoolId  Int
-  school    User   @relation(fields: [schoolId], references: [id])
+  id       Int    @id @default(autoincrement())
+  item     String
+  amount   Int
+  schoolId Int
+  school   User   @relation(fields: [schoolId], references: [id])
 }
 
 model MoneyDonation {
-  id         Int      @id @default(autoincrement())
-  amount     Int
-  donorId    Int
-  createdAt  DateTime @default(now())
-
-  donor        User               @relation(fields: [donorId], references: [id])
+  id            Int                 @id @default(autoincrement())
+  amount        Int
+  donorId       Int
+  createdAt     DateTime            @default(now())
   distributions MoneyDistribution[]
+  donor         User                @relation(fields: [donorId], references: [id])
 }
 
 model MoneyDistribution {
-  id              Int      @id @default(autoincrement())
+  id              Int            @id @default(autoincrement())
   amount          Int
-  createdAt       DateTime @default(now())
-  moneyDonationId Int?     // isteğe bağlı
+  createdAt       DateTime       @default(now())
+  moneyDonationId Int?
   schoolId        Int
-
   moneyDonation   MoneyDonation? @relation(fields: [moneyDonationId], references: [id])
   school          User           @relation("SchoolDistributions", fields: [schoolId], references: [id])
 }
 
 model MaterialDonation {
-  id         Int      @id @default(autoincrement())
-  item       String
-  amount     Int
-  donorId    Int
-  schoolId   Int
-  createdAt  DateTime @default(now())
-
-  donor      User     @relation("DonorMaterialDonations", fields: [donorId], references: [id])
-  school     User     @relation("SchoolMaterialDonations", fields: [schoolId], references: [id])
+  id        Int      @id @default(autoincrement())
+  item      String
+  amount    Int
+  donorId   Int
+  schoolId  Int
+  createdAt DateTime @default(now())
+  donor     User     @relation("DonorMaterialDonations", fields: [donorId], references: [id])
+  school    User     @relation("SchoolMaterialDonations", fields: [schoolId], references: [id])
 }
 
 model News {
-  id     Int    @id @default(autoincrement())
-  title  String
-  image  String?
+  id    Int     @id @default(autoincrement())
+  title String
+  image String?
+}
+
+enum Role {
+  admin
+  donor
+  school
 }

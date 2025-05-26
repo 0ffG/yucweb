@@ -1,66 +1,46 @@
 "use client";
 
-import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { YucLogo } from './yuc-logo';
-import { useRouter } from 'next/navigation';
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { YucLogo } from "./yuc-logo";
 
 interface LocalUser {
   id: number;
   name: string;
   role: string;
-  photo?: string;
+  photo?: string | null;
 }
 
 export default function NavigationBar() {
-  const router = useRouter();
   const [user, setUser] = useState<LocalUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    const loadUser = () => {
-      const localUser = localStorage.getItem("user");
-      if (localUser) {
-        setUser(JSON.parse(localUser));
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    };
-
-    loadUser();
-
-    const handleStorage = () => {
-      const newUser = localStorage.getItem("user");
-      if (newUser) {
-        setUser(JSON.parse(newUser));
-      } else {
-        setUser(null);
-      }
-    };
-
-    window.addEventListener("storage", handleStorage);
-    return () => window.removeEventListener("storage", handleStorage);
+    const localUserRaw = localStorage.getItem("user");
+    if (localUserRaw) {
+      const parsedUser = JSON.parse(localUserRaw);
+      setUser(parsedUser);
+    }
   }, []);
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/logout', {
-        method: 'POST',
-        credentials: 'include',
+      await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
       });
       localStorage.removeItem("user");
       setUser(null);
-      router.push('/');
+      router.push("/");
       router.refresh();
-    } catch (error) {
-      console.error("Çıkış hatası:", error);
+    } catch (err) {
+      console.error("Logout error:", err);
     }
   };
 
   const goToProfile = () => {
     if (!user) return;
-
     switch (user.role) {
       case "donor":
         router.push("/donor");
@@ -79,44 +59,56 @@ export default function NavigationBar() {
   return (
     <header className="sticky top-0 z-10 backdrop-blur-md bg-slate-900 w-full border-b border-slate-700">
       <div className="w-full px-6 py-4 flex items-center justify-between">
+        {/* Sol: Logo */}
         <div className="flex items-center justify-start">
           <Link href="/" className="flex items-center">
             <YucLogo />
           </Link>
         </div>
 
+        {/* Sağ: Butonlar */}
         <div className="flex items-center gap-4">
+          {/* Her zaman görünen buton */}
           <Link
             href="/about"
-            className="px-6 py-2 rounded-full bg-white/80 text-gray-700 font-medium text-sm transition-all hover:shadow-md hover:bg-white"
+            className="px-6 py-2 rounded-full bg-white/80 text-gray-700 font-medium text-sm hover:bg-white"
           >
             Hakkımızda
           </Link>
 
-          {loading ? null : !user ? (
+          {/* Kullanıcı yoksa login/register göster */}
+          {!user ? (
             <>
               <Link
                 href="/register"
-                className="px-6 py-2 rounded-full bg-white/80 border border-gray-200 text-gray-700 font-medium text-sm transition-all hover:shadow-md hover:bg-white"
+                className="px-6 py-2 rounded-full bg-white text-gray-800 text-sm"
               >
                 Kayıt Ol
               </Link>
               <Link
                 href="/login"
-                className="px-6 py-2 rounded-full bg-green-900/90 text-white font-medium text-sm transition-all hover:shadow-md hover:bg-pink-500"
+                className="px-6 py-2 rounded-full bg-green-800 text-white text-sm"
               >
                 Giriş Yap
               </Link>
             </>
           ) : (
             <>
+              {user.role === "admin" && (
+                <Link
+                  href="/admin"
+                  className="px-6 py-2 rounded-full bg-blue-700 text-white text-sm"
+                >
+                  Yönetici Ekranı
+                </Link>
+              )}
               <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/10 text-white text-sm">
-                <span>Hoşgeldiniz, <span className="font-semibold">{user.name}</span></span>
-                <button onClick={goToProfile} className="ml-2">
+                <span>Hoşgeldiniz, <strong>{user.name}</strong></span>
+                <button onClick={goToProfile}>
                   <img
-                    src={user.photo || '/pfpdefault.jpg'}
+                    src={user.photo || "/pfpdefault.jpg"}
                     alt="Profil"
-                    className="w-8 h-8 rounded-full border border-white shadow-sm hover:scale-105 transition"
+                    className="w-8 h-8 rounded-full border border-white"
                   />
                 </button>
               </div>

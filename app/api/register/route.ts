@@ -2,6 +2,8 @@ import bcrypt from "bcryptjs";
 import { NextResponse } from 'next/server';
 import prisma from "@/lib/prisma";
 import { Role } from '@prisma/client';
+import { sendVerificationEmail } from "@/lib/email";
+import crypto from "crypto";
 
 interface RegisterBody {
   name: string;
@@ -61,6 +63,9 @@ export async function POST(request: Request) {
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
+  // Doğrulama token'ı oluştur
+  const verificationToken = crypto.randomBytes(32).toString("hex");
+
   const user = await prisma.user.create({
     data: {
       name,
@@ -69,11 +74,16 @@ export async function POST(request: Request) {
       email,
       password: hashedPassword,
       role: mappedRole,
-      photo: photoUrl?.trim() || null
+      photo: photoUrl?.trim() || null,
+      verificationToken,
+      emailVerified: false
     }
   });
 
-  return NextResponse.json({ message: 'Kayıt başarılı', user }, { status: 201 });
+  // Doğrulama e-postası gönder
+  await sendVerificationEmail(email, verificationToken);
+
+  return NextResponse.json({ message: 'Kayıt başarılı, lütfen e-postanızı doğrulayın.', user }, { status: 201 });
 } catch (error) {
   console.error("Kayıt hatası:", error);
   return NextResponse.json({ error: 'Sunucu hatası.' }, { status: 500 });
