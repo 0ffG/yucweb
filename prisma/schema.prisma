@@ -24,6 +24,8 @@ model User {
   materialReceived   MaterialDonation[]  @relation("SchoolMaterialDonations")
   moneyDistributions MoneyDistribution[] @relation("SchoolDistributions")
   moneyDonations     MoneyDonation[]
+  emailVerified      Boolean             @default(false)
+  verificationToken  String?
 }
 
 model Inventory {
