@@ -41,7 +41,9 @@ export default function DonorProfileById() {
         toast({
           title: "Hata",
           description: err.message,
-          variant: "destructive",
+          type: "error",
+          open: true,
+          onOpenChange: () => {},
         });
         router.push("/");
       });
