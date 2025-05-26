@@ -20,6 +20,7 @@ export default function DonationPage() {
   const [matchedItems, setMatchedItems] = useState<string[]>([]);
   const [filteredNeeds, setFilteredNeeds] = useState<Need[]>([]);
   const [donationItems, setDonationItems] = useState<{ item: string; count: number; school: string }[]>([]);
+  const [activeBox, setActiveBox] = useState<'material' | 'money'>('material');
 
   //for credit card details
   const [cardNumber, setCardNumber] = useState('');
@@ -193,127 +194,167 @@ export default function DonationPage() {
     }
   };
 
+  // Pop-up gösterme koşulu: hem eşya hem adet girilmişse ve öneri varsa
+  const showSchoolPopup = inputItem.trim() && donationCount > 0 && filteredNeeds.length > 0;
+
   return (
-    <div className="min-h-screen bg-white">
-      <div className="text-center py-6">
-        <Image src="/logo2.jpeg" alt="Logo" width={100} height={100} className="mx-auto" />
-        <h2 className="text-xl font-semibold mt-2">Bir çocuk daha mutlu olsun!</h2>
-      </div>
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Yardım kutularını saran ana konteyner */}
 
-      <div className="flex justify-center gap-4 mb-6">
-        <button className="donate-btn item" onClick={() => setDonationType('material')}>MALZEME YARDIMI</button>
-        <button className="donate-btn money" onClick={() => setDonationType('money')}>PARA YARDIMI</button>
-      </div>
+      <div className="flex-1 flex justify-center items-stretch max-w-screen-2xl mx-auto w-full px-2 pb-8 border border-gray-700 border-t-2 border-b-2 border-t-blue-700 border-b-blue-700 rounded-xl shadow-lg bg-white">
+        {/* Sol Kutu: Malzeme Yardımı */}
+        <div
+          className="flex-1 flex flex-col justify-stretch mr-2 pr-4 border-r-2 border-blue-700 bg-white rounded-l-xl shadow-lg border-t-0 border-b-0"
+        >
+          <div className="card h-full w-full flex flex-col">
+            <div className="flex justify-center mb-4">
+              <span
+                className={`inline-block bg-blue-100 text-blue-700 font-bold px-6 py-2 rounded-full shadow text-lg ${activeBox !== 'material' ? 'cursor-pointer hover:bg-blue-200' : ''}`}
+                onClick={() => activeBox !== 'material' && setActiveBox('material')}
+              >
+                MALZEME YARDIMI
+              </span>
+            </div>
+            <div className="flex gap-2 w-full items-center mt-16 relative">
+              <input
+                className="custom-amount w-2/3"
+                placeholder="Yardım yapmak istediğiniz eşyayı giriniz"
+                value={inputItem}
+                onChange={e => setInputItem(e.target.value)}
+              />
+              <input
+                type="number"
+                min="1"
+                className="custom-amount w-1/3"
+                placeholder="Adet"
+                value={donationCount}
+                onChange={(e) => setDonationCount(Number(e.target.value))}
+              />
+              {matchedItems.length > 0 && (
+                <ul className="absolute left-0 right-0 top-full mt-1 w-full rounded-lg border border-blue-400 bg-white shadow-md max-h-60 overflow-y-auto text-sm z-30">
+                  {matchedItems.map((item, index) => (
+                    <li
+                      key={index}
+                      onClick={() => handleItemSelect(item)}
+                      className="px-4 py-2 hover:bg-blue-100 hover:text-blue-700 cursor-pointer font-semibold"
+                    >
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <button className="donate-confirm mt-16" onClick={handleAddItem}>Listeye Ekle</button>
 
-      <div className="card mx-auto w-full max-w-xl">
-        {donationType === 'material' && (
-          <>
-            <input
-              className="custom-amount w-full"
-              placeholder="Yardım yapmak istediğiniz eşyayı giriniz"
-              value={inputItem}
-              onChange={e => setInputItem(e.target.value)}
-            />
-            {matchedItems.length > 0 && (
-              <ul className="absolute left-0 right-0 mt-1 w-full rounded-lg border border-blue-400 bg-white shadow-md max-h-60 overflow-y-auto text-sm z-20">
-                {matchedItems.map((item, index) => (
-                  <li
-                    key={index}
-                    onClick={() => handleItemSelect(item)}
-                    className="px-4 py-2 hover:bg-blue-100 hover:text-blue-700 cursor-pointer font-semibold"
-                  >
-                    {item}
+            <div className="mt-4 border-t pt-4">
+              <h4 className="font-semibold mb-2">Seçilen Okul:</h4>
+              <ul className="space-y-2">
+                {donationItems.map((item, idx) => (
+                  <li key={idx} className="flex justify-between items-center bg-gray-100 rounded-lg px-4 py-2">
+                    <span className="font-medium">
+                      {item.item} - {item.count} adet <span className="text-gray-500">({item.school})</span>
+                    </span>
+                    <button
+                      className="text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded-md text-sm"
+                      onClick={() => removeItem(idx)}
+                    >
+                      Sil
+                    </button>
                   </li>
                 ))}
               </ul>
-            )}
-            <input
-              type="number"
-              min="1"
-              className="custom-amount mt-2 w-full"
-              placeholder="Adet"
-              value={donationCount}
-              onChange={(e) => setDonationCount(Number(e.target.value))}
-            />
-            <button className="donate-confirm mt-2" onClick={handleAddItem}>Listeye Ekle</button>
-
-            <div className="mt-4 border-t pt-4">
-  <h4 className="font-semibold mb-2">Bağış Listesi:</h4>
-  <ul className="space-y-2">
-    {donationItems.map((item, idx) => (
-      <li key={idx} className="flex justify-between items-center bg-gray-100 rounded-lg px-4 py-2">
-        <span className="font-medium">
-          {item.item} - {item.count} adet <span className="text-gray-500">({item.school})</span>
-        </span>
-        <button
-          className="text-white bg-red-500 hover:bg-red-600 px-3 py-1 rounded-md text-sm"
-          onClick={() => removeItem(idx)}
-        >
-          Sil
-        </button>
-      </li>
-    ))}
-  </ul>
-
             </div>
 
-            <input
-              type="text"
-              className="custom-amount mt-4 w-full"
-              placeholder="Okul adı"
-              value={selectedSchool}
-              onChange={(e) => setSelectedSchool(e.target.value)}
-            />
+            <div className="flex justify-center w-full mt-4">
+              <input
+                type="text"
+                className="custom-amount w-full max-w-xs"
+                placeholder="Okul adı"
+                value={selectedSchool}
+                onChange={(e) => setSelectedSchool(e.target.value)}
+              />
+              <button
+                type="button"
+                className="ml-2 flex items-center justify-center bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-full w-10 h-10 shadow text-xl"
+                onClick={() => setFilteredNeeds(filteredNeeds.length > 0 ? [] : allNeeds)}
+                title="Okul seçimi için öneri aç"
+              >
+                <span className="text-2xl">▼</span>
+              </button>
+            </div>
 
             <button className="donate-confirm mt-4" onClick={handleDonationSubmit}>Bağış Yap</button>
 
-            <div className="mt-6">
-              <h4 className="font-semibold mb-2">Okullar:</h4>
-              <div className="max-h-48 overflow-y-auto border rounded-md">
-                <table className="min-w-full text-left text-sm">
-                  <thead className="bg-gray-100 font-medium">
-                    <tr>
-                      <th className="px-4 py-2">OKUL ADI</th>
-                      <th className="px-4 py-2">İHTİYAÇ ADEDİ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredNeeds.map((entry, index) => (
-                      <tr
-                        key={index}
-                        className={`cursor-pointer ${selectedSchool === entry.school ? 'bg-gray-100' : ''}`}
-                        onClick={() => handleSchoolSelect(entry.school)}
-                      >
-                        <td className="px-4 py-2">{entry.school}</td>
-                        <td className="px-4 py-2">{entry.count}</td>
+            {/* Okul öneri popup'u */}
+            {showSchoolPopup && (
+              <div className="fixed inset-0 z-30 flex items-center justify-center bg-black bg-opacity-40">
+                <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full relative">
+                  <button
+                    className="absolute top-2 right-2 text-gray-500 hover:text-black text-xl"
+                    onClick={() => setFilteredNeeds([])}
+                  >
+                    ×
+                  </button>
+                  <h4 className="font-bold text-lg mb-4 text-blue-700">İhtiyacı Olan Okullar</h4>
+                  <table className="min-w-full text-left text-sm mb-2">
+                    <thead className="bg-gray-100 font-medium">
+                      <tr>
+                        <th className="px-4 py-2">OKUL ADI</th>
+                        <th className="px-4 py-2">İHTİYAÇ ADEDİ</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {filteredNeeds.map((entry, index) => (
+                        <tr
+                          key={index}
+                          className={`cursor-pointer ${selectedSchool === entry.school ? 'bg-gray-100' : ''}`}
+                          onClick={() => setSelectedSchool(entry.school)}
+                        >
+                          <td className="px-4 py-2">{entry.school}</td>
+                          <td className="px-4 py-2">{entry.count}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="text-xs text-gray-500">Bir okula tıklayarak seçebilirsiniz.</p>
+                </div>
               </div>
+            )}
+          </div>
+        </div>
+        {/* Sağ Kutu: Para Yardımı */}
+        <div
+          className="flex-1 flex flex-col justify-stretch ml-2 pl-4 bg-white rounded-r-xl shadow-lg border-t-0 border-b-0"
+        >
+          <div className="card h-full w-full flex flex-col">
+            <div className="flex justify-center mb-4">
+              <span
+                className={`inline-block bg-green-100 text-green-700 font-bold px-6 py-2 rounded-full shadow text-lg ${activeBox !== 'money' ? 'cursor-pointer hover:bg-green-200' : ''}`}
+                onClick={() => activeBox !== 'money' && setActiveBox('money')}
+              >
+                PARA YARDIMI
+              </span>
             </div>
-          </>
-        )}
-
-        {donationType === 'money' && (
-          <>
             <div className="donation-options">
               <button className="amount-btn" onClick={() => setAmount(100)}>100₺</button>
               <button className="amount-btn" onClick={() => setAmount(300)}>300₺</button>
               <button className="amount-btn" onClick={() => setAmount('')}>DİĞER</button>
             </div>
-            <input
-              type="number"
-              className="custom-amount mt-2"
-              placeholder="Tutar giriniz"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-            />
+            <div className="flex justify-center w-full mt-2">
+              <input
+                type="number"
+                className="custom-amount w-full max-w-xs mt-2"
+                placeholder="Tutar giriniz"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </div>
             <button className="donate-confirm mt-4" onClick={() => setShowPaymentPopup(true)}>Ödemeyi Bitir</button>
-          </>
-        )}
+          </div>
+        </div>
       </div>
 
+      {/* Ödeme popup'ı aynı şekilde kalabilir */}
       {showPaymentPopup && (
         <div className="popup-overlay">
           <div className="popup-content">

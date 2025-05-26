@@ -34,7 +34,9 @@ export default function DonorProfile() {
       toast({
         title: "Erişim Reddedildi",
         description: "Bu sayfaya yalnızca bağışçılar erişebilir.",
-        variant: "destructive",
+        type: "error",
+        open: true,
+        onOpenChange: () => {},
       });
       router.push("/");
       return;
@@ -48,23 +50,16 @@ export default function DonorProfile() {
         if (!res.ok) throw new Error("Veri alınamadı");
         return res.json();
       })
-      .then((data: Donor) => {
-        if (data.id !== userId) {
-          toast({
-            title: "Yetkisiz",
-            description: "Sadece kendi profilinizi görüntüleyebilirsiniz.",
-            variant: "destructive",
-          });
-          router.push("/");
-          return;
-        }
+      .then((data) => {
         setDonor(data);
       })
       .catch((err) => {
         toast({
           title: "Hata",
           description: err.message,
-          variant: "destructive",
+          type: "error",
+          open: true,
+          onOpenChange: () => {},
         });
         router.push("/");
       });
@@ -96,6 +91,7 @@ export default function DonorProfile() {
               <button
                 type="button"
                 className="rounded-xl border border-blue-950 py-1 px-4 text-blue-950 text-xs hover:border-black hover:text-black"
+                onClick={() => router.push("/donor/edit")}
               >
                 Profili Düzenle
               </button>
