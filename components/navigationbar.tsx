@@ -21,7 +21,25 @@ export default function NavigationBar() {
     if (localUserRaw) {
       const parsedUser = JSON.parse(localUserRaw);
       setUser(parsedUser);
+    } else {
+      setUser(null);
     }
+
+    // Dinleyiciler: storage ve custom event
+    const handleUserChange = () => {
+      const updatedUserRaw = localStorage.getItem("user");
+      if (updatedUserRaw) {
+        setUser(JSON.parse(updatedUserRaw));
+      } else {
+        setUser(null);
+      }
+    };
+    window.addEventListener("storage", handleUserChange);
+    window.addEventListener("userChanged", handleUserChange);
+    return () => {
+      window.removeEventListener("storage", handleUserChange);
+      window.removeEventListener("userChanged", handleUserChange);
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -32,6 +50,7 @@ export default function NavigationBar() {
       });
       localStorage.removeItem("user");
       setUser(null);
+      window.dispatchEvent(new Event("userChanged")); // Custom event
       router.push("/");
       router.refresh();
     } catch (err) {

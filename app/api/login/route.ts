@@ -15,6 +15,7 @@ export async function POST(request: Request) {
       password: true,
       name: true,
       role: true,
+      photo: true, 
       emailVerified: true
     }
   });
