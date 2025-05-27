@@ -15,6 +15,6 @@ export async function sendVerificationEmail(to: string, token: string) {
     from: process.env.EMAIL_USER,
     to,
     subject: 'E-posta Doğrulama',
-    html: `<p>Hesabınızı doğrulamak için <a href="${verificationUrl}">buraya tıklayın</a>.</p>`
+    html: `<p>Hesabınızı doğrulamak için <a href="${verificationUrl}">buraya tiklayin</a>.</p><p>Linke tıkladıktan sonra, admin kısa süre içerisinde hesabınızı onayladıktan sonra giriş yapabilirsiniz.</p>`
   });
 }

@@ -53,40 +53,43 @@ export async function POST(request: Request) {
   }
 
   try {
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
-  });//checking for existing user
+    // Mevcut kullanıcı kontrolü
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
 
-  if (existingUser) {
-    return NextResponse.json({ error: 'Bu e-posta adresi zaten kullanılıyor.' }, { status: 409 });
-  }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-
-  // Doğrulama token'ı oluştur
-  const verificationToken = crypto.randomBytes(32).toString("hex");
-
-  const user = await prisma.user.create({
-    data: {
-      name,
-      lastName: mappedRole === "donor" ? surname! : '',
-      location: mappedRole === "school" ? location! : null,
-      email,
-      password: hashedPassword,
-      role: mappedRole,
-      photo: photoUrl?.trim() || null,
-      verificationToken,
-      emailVerified: false
+    if (existingUser) {
+      return NextResponse.json({ error: 'Bu e-posta adresi zaten kullanılıyor.' }, { status: 409 });
     }
-  });
 
-  // Doğrulama e-postası gönder
-  await sendVerificationEmail(email, verificationToken);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-  return NextResponse.json({ message: 'Kayıt başarılı, lütfen e-postanızı doğrulayın.', user }, { status: 201 });
-} catch (error) {
-  console.error("Kayıt hatası:", error);
-  return NextResponse.json({ error: 'Sunucu hatası.' }, { status: 500 });
-}
+    // Email doğrulama token’ı
+    const verificationToken = crypto.randomBytes(32).toString("hex");
 
+    const user = await prisma.user.create({
+      data: {
+        name,
+        lastName: mappedRole === "donor" ? surname! : '',
+        location: mappedRole === "school" ? location! : null,
+        email,
+        password: hashedPassword,
+        role: mappedRole,
+        photo: photoUrl?.trim() || null,
+        verificationToken,
+        emailVerified: false,
+        adminApproved: mappedRole === "school" ? false : true 
+      }
+    });
+
+    await sendVerificationEmail(email, verificationToken);
+
+    return NextResponse.json(
+      { message: 'Kayıt başarılı, lütfen e-postanızı doğrulayın.', user },
+      { status: 201 }
+    );
+  } catch (error) {
+    console.error("Kayıt hatası:", error);
+    return NextResponse.json({ error: 'Sunucu hatası.' }, { status: 500 });
+  }
 }

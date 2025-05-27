@@ -25,6 +25,7 @@ model User {
   moneyDistributions MoneyDistribution[] @relation("SchoolDistributions")
   moneyDonations     MoneyDonation[]
   emailVerified      Boolean             @default(false)
+  adminApproved      Boolean             @default(false)
   verificationToken  String?
 }
 

@@ -27,6 +27,9 @@ export default function AdminProfile() {
   const [broadcastLoading, setBroadcastLoading] = useState(false);
   const [broadcastResult, setBroadcastResult] = useState<string | null>(null);
 
+  // Ek state
+  const [pendingSchools, setPendingSchools] = useState<any[]>([]);
+
   const fetchUsers = async () => {
     try {
       const res = await fetch('/api/admin/users');
@@ -206,6 +209,50 @@ export default function AdminProfile() {
         console.error("Okullar çekilemedi", err);
         setSchools([]);
       });
+  }, []);
+
+  // Ek fonksiyonlar
+  const fetchPendingSchools = async () => {
+    const res = await fetch("/api/admin/pending-schools");
+    const data = await res.json();
+    setPendingSchools(data);
+  };
+
+  const handleApproveSchool = async (id: number) => {
+    const res = await fetch("/api/admin/approve-school", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+
+    if (res.ok) {
+      alert("Okul onaylandı.");
+      fetchPendingSchools();
+      fetchUsers(); // liste güncellensin
+    } else {
+      const data = await res.json();
+      alert("Onaylanamadı: " + (data.error || res.statusText));
+    }
+  };
+
+  const handleRejectSchool = async (id: number) => {
+    const res = await fetch("/api/admin/reject-school", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    if (res.ok) {
+      alert("Okul reddedildi.");
+      fetchPendingSchools();
+      fetchUsers();
+    } else {
+      const data = await res.json();
+      alert("Reddedilemedi: " + (data.error || res.statusText));
+    }
+  };
+
+  useEffect(() => {
+    fetchPendingSchools();
   }, []);
 
   return (
@@ -421,6 +468,52 @@ export default function AdminProfile() {
               </tbody>
             </table>
             {schools.length === 0 && <p className="text-center text-gray-500 py-4">Kayıtlı okul bulunamadı.</p>}
+          </div>
+        </div>
+
+        {/* Onay Bekleyen Okullar */}
+        <div className="bg-white shadow-md p-6 rounded-2xl border border-yellow-300">
+          <h2 className="text-xl font-semibold mb-4">Onay Bekleyen Okullar</h2>
+          <div className="max-h-[300px] overflow-y-auto mt-4">
+            {pendingSchools.length === 0 ? (
+              <p className="text-gray-500">Bekleyen okul bulunamadı.</p>
+            ) : (
+              <table className="w-full table-auto text-sm">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="p-2 text-left">ID</th>
+                    <th className="p-2 text-left">İsim</th>
+                    <th className="p-2 text-left">Email</th>
+                    <th className="p-2 text-left">Adres</th>
+                    <th className="p-2 text-center">İşlem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingSchools.map((school) => (
+                    <tr key={school.id} className="border-b hover:bg-gray-50">
+                      <td className="p-2">{school.id}</td>
+                      <td className="p-2">{school.name}</td>
+                      <td className="p-2">{school.email}</td>
+                      <td className="p-2">{school.location}</td>
+                      <td className="p-2 text-center">
+                        <button
+                          className="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700 mr-2"
+                          onClick={() => handleApproveSchool(school.id)}
+                        >
+                          Onayla
+                        </button>
+                        <button
+                          className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700"
+                          onClick={() => handleRejectSchool(school.id)}
+                        >
+                          Reddet
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </div>
 

@@ -16,7 +16,8 @@ export async function POST(request: Request) {
       name: true,
       role: true,
       photo: true, 
-      emailVerified: true
+      emailVerified: true,
+      adminApproved: true
     }
   });
 
@@ -33,6 +34,11 @@ export async function POST(request: Request) {
   // E-posta doğrulandı mı kontrolü
   if (!user.emailVerified) {
     return NextResponse.json({ error: 'Lütfen e-posta adresinizi doğrulayın.' }, { status: 401 });
+  }
+
+
+  if (user.role === "school" && !user.adminApproved) {
+    return NextResponse.json({ error: "Admin onayı bekleniyor." }, { status: 403 });
   }
 
   // JWT oluştur
