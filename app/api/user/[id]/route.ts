@@ -6,9 +6,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const requestedId = parseInt(params.id);
+  const { id } = await context.params;
+  const requestedId = parseInt(id);
   if (isNaN(requestedId)) {
     return NextResponse.json({ error: "Geçersiz ID" }, { status: 400 });
   }
@@ -81,9 +82,10 @@ export async function GET(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const requestedId = parseInt(params.id);
+  const { id } = await context.params;
+  const requestedId = parseInt(id);
   if (isNaN(requestedId)) {
     return NextResponse.json({ error: "Geçersiz ID" }, { status: 400 });
   }
@@ -111,9 +113,10 @@ export async function DELETE(
 }
 export async function PUT(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const requestedId = parseInt(params.id);
+  const { id } = await context.params;
+  const requestedId = parseInt(id);
   if (isNaN(requestedId)) {
     return NextResponse.json({ error: "Geçersiz ID" }, { status: 400 });
   }
