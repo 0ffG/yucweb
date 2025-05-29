@@ -123,7 +123,7 @@ export default function DonorProfile() {
             <div className="p-4 border border-gray-300 rounded-lg shadow-sm bg-gray-50 flex items-center gap-2">
               <img src="/plant.png" alt="Fidan" className="h-6 w-6" />
               <span className="font-mono">
-                Toplam Fidan: <strong>0</strong>
+                Toplam Fidan: <strong>{Math.floor(donor.materialDonations.length / 5)}</strong>
               </span>
             </div>
           </div>
