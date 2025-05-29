@@ -218,11 +218,11 @@ export default function AdminProfile() {
     setPendingSchools(data);
   };
 
-  const handleApproveSchool = async (id: number) => {
+  const handleApproveSchool = async (userId: number) => {
     const res = await fetch("/api/admin/approve-school", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      body: JSON.stringify({ userId }),
     });
 
     if (res.ok) {
