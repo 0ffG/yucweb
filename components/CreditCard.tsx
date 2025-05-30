@@ -23,7 +23,7 @@ export default function CreditCard({
   const displayExpiry = cardExpiryProp || 'MM/YY';
 
   return (
-    <div className="credit-card">
+    <div className="credit-card w-[320px] h-[200px] sm:w-[360px] sm:h-[220px] md:w-[400px] md:h-[240px] lg:w-[440px] lg:h-[260px] mx-auto">
       <div className="card-top">
         <div className="mastercard-logo"> {/* veya Visa, Amex etc. logo eklenebilir */}
           <div className="circle red"></div>
