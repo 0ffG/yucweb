@@ -1,43 +1,38 @@
 "use client";
 
 import React from 'react';
-import '@/styles/CreditCard.css'; // Bu CSS dosyasının stilleri doğru şekilde tanımladığını varsayıyoruz.
+import '@/styles/CreditCard.css'; // Bu CSS dosyası stilleri tanımlayacak
 
 interface CreditCardProps {
   cardNumber?: string;
   cardName?: string;
   cardExpiry?: string;
-  cardCVV?: string; // CVV genellikle kartın ön yüzünde gösterilmez.
+  cardCVV?: string; // CVV bu component'te görsel olarak kullanılmıyor
 }
 
 export default function CreditCard({
-  cardNumber: cardNumberProp, // Props'ları farklı isimle alıp içinde işleyebiliriz
+  cardNumber: cardNumberProp,
   cardName: cardNameProp,
   cardExpiry: cardExpiryProp,
-  // cardCVV prop'u bu component'te görsel olarak kullanılmıyor.
 }: CreditCardProps) {
-  // Eğer prop olarak gelen değer boşsa (kullanıcı henüz giriş yapmadıysa veya sildiyse),
-  // kart üzerinde genel bir yer tutucu göster. Doluysa, gelen değeri göster.
   const displayNumber = cardNumberProp || '•••• •••• •••• ••••';
   const displayName = cardNameProp || 'AD SOYAD';
   const displayExpiry = cardExpiryProp || 'MM/YY';
 
   return (
-    <div className="credit-card w-[320px] h-[200px] sm:w-[360px] sm:h-[220px] md:w-[400px] md:h-[240px] lg:w-[440px] lg:h-[260px] mx-auto">
+    <div className="credit-card">
       <div className="card-top">
-        <div className="mastercard-logo"> {/* veya Visa, Amex etc. logo eklenebilir */}
+        <div className="mastercard-logo"> {/* Logo yapınıza göre güncelleyebilirsiniz */}
           <div className="circle red"></div>
           <div className="circle yellow"></div>
         </div>
         <div className="chip"></div>
       </div>
 
-      {/* Card Number Label kaldırıldı, direkt numara gösterimi daha yaygın */}
-      {/* <div className="card-number-label">Card Number</div> */}
       <div className="card-number">{displayNumber}</div>
 
       <div className="card-bottom">
-        <div className="card-holder"> {/* card-name yerine card-holder daha yaygın bir class ismi olabilir */}
+        <div className="card-holder">
           <span className="label">Card Holder</span>
           <span className="name">{displayName}</span>
         </div>
