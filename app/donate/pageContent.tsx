@@ -408,44 +408,46 @@ export default function DonationPage() {
 
       {/* Ödeme popup'ı */}
       {showPaymentPopup && (
-        <div className="popup-overlay fixed inset-0 z-40 flex items-center justify-center bg-black bg-opacity-50 p-4">
-          <div className="popup-content bg-white rounded-lg shadow-xl p-4 sm:p-6 max-w-md w-full">
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 text-center">Ödeme Bilgileri</h3>
-            <CreditCard cardNumber={cardNumber} cardName={cardName} cardExpiry={cardExpiry} cardCVV={cardCVV} />
-            <input
-              className="popup-input w-full mt-4 text-sm sm:text-base"
-              placeholder="Kart Numarası"
-              value={cardNumber}
-              onChange={(e) => setCardNumber(e.target.value)}
-              maxLength={19} // Usually 16 digits + 3 spaces for formatting
-            />
-            <input
-              className="popup-input w-full mt-3 text-sm sm:text-base"
-              placeholder="Kart Üzerindeki İsim"
-              value={cardName}
-              onChange={(e) => setCardName(e.target.value)}
-            />
-            <div className="flex flex-col sm:flex-row gap-3 mt-3 w-full">
-              <input
-                className="popup-input w-full sm:w-1/2 text-sm sm:text-base"
-                placeholder="Son Kullanma (AA/YY)"
-                value={cardExpiry}
-                onChange={(e) => setCardExpiry(e.target.value)}
-                maxLength={5} // MM/YY
-              />
-              <input
-                className="popup-input w-full sm:w-1/2 text-sm sm:text-base"
-                placeholder="CVV"
-                value={cardCVV}
-                onChange={(e) => setCardCVV(e.target.value)}
-                maxLength={3}
-              />
-            </div>
-            <button className="popup-confirm w-full mt-6 text-sm sm:text-base" onClick={handleMoneyDonation}>Ödemeyi Onayla ({amount}₺)</button>
-            <button onClick={() => setShowPaymentPopup(false)} className="popup-cancel w-full mt-2 text-sm sm:text-base">İptal</button>
-          </div>
-        </div>
-      )}
+  <div className="popup-overlay ...">
+    <div className="popup-content ...">
+      <CreditCard 
+        cardNumber={cardNumber} 
+        cardName={cardName} 
+        cardExpiry={cardExpiry} 
+        cardCVV={cardCVV} // Bu prop CreditCard component'i içinde görsel olarak kullanılmıyor ama iletiliyor
+      />
+      <input
+        className="popup-input ..."
+        placeholder="Kart Numarası"
+        value={cardNumber}
+        onChange={(e) => setCardNumber(e.target.value)}
+        // ... diğer inputlar
+      />
+      <input
+        className="popup-input w-full mt-3 text-sm sm:text-base"
+        placeholder="Kart Üzerindeki İsim"
+        value={cardName}
+        onChange={(e) => setCardName(e.target.value)}
+      />
+      <div className="flex flex-col sm:flex-row gap-3 mt-3 w-full">
+        <input
+          className="popup-input w-full sm:w-1/2 text-sm sm:text-base"
+          placeholder="Son Kullanma (AA/YY)"
+          value={cardExpiry}
+          onChange={(e) => setCardExpiry(e.target.value)}
+          maxLength={5}
+        />
+        <input
+          className="popup-input w-full sm:w-1/2 text-sm sm:text-base"
+          placeholder="CVV"
+          value={cardCVV}
+          onChange={(e) => setCardCVV(e.target.value)}
+          maxLength={3}
+        />
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
